@@ -74,6 +74,21 @@ func HashBlock(height uint, preHash string, timestamp uint, data string, nonce u
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+type Transaction struct {
+	inHash  string
+	inSig   string
+	outAddr string
+	hash    string
+}
+
+func (t *Transaction) HashTransaction(inHash string, outAddr string) string {
+	h := crypto.SHA256.New()
+
+	h.Write([]byte(fmt.Sprintf("%v,%v", inHash, outAddr)))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 type TxPool struct{}
 
 type Wallet struct {
@@ -81,7 +96,7 @@ type Wallet struct {
 	pubKey ecdsa.PublicKey
 }
 
-func SignTx() {
+func (w *Wallet) SignTx() {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		panic(err)
