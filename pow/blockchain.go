@@ -8,25 +8,24 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type Tinycoin struct {
-	blocks     []Block
-	pool       []TxPool
-	wallet     Wallet
-	difficulty uint
-	stopFlg    bool
+	Blocks     []Block
+	Pool       TxPool
+	Wallet     Wallet
+	Difficulty uint
+	StopFlg    bool
 }
 
 func (tc *Tinycoin) LatestBlock() Block {
-	len := len(tc.blocks)
-	return tc.blocks[len-1]
+	len := len(tc.Blocks)
+	return tc.Blocks[len-1]
 }
 
 func (tc *Tinycoin) AddBlock(newBlock Block) {
 	tc.validBlock(newBlock)
-	tc.blocks = append(tc.blocks, newBlock)
+	tc.Blocks = append(tc.Blocks, newBlock)
 }
 
 func (tc *Tinycoin) validBlock(block Block) {
@@ -43,38 +42,56 @@ func (tc *Tinycoin) validBlock(block Block) {
 
 	for i, val := range block.hash {
 		if val != rune(0) {
-			panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.difficulty))))
+			panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.Difficulty))))
 		}
 
-		if uint(i)+1 > tc.difficulty {
+		if uint(i)+1 > tc.Difficulty {
 			break
 		}
 	}
 }
 
 func (tc *Tinycoin) GenNextBlock() {
-	nonce := 0
-	pre := tc.LatestBlock()
-	conbaseTx := tc.GenCoinbaseTx()
+	// nonce := 0
+	// pre := tc.LatestBlock()
+	// conbaseTx := tc.GenCoinbaseTx()
 
-	ticker := time.NewTicker(5 * time.Millisecond / 32)
-	done := make(chan bool)
+	// ticker := time.NewTicker(5 * time.Millisecond / 32)
+	// done := make(chan bool)
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case t := <-ticker.C:
-				fmt.Println("Tick at", t)
-			}
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-done:
+	// 			return
+	// 		case t := <-ticker.C:
+	// 			data := ""
+	// 			for _, tx := range tc.pool.txs {
+	// 				fmt.Sprintf("%v", tx)
+	// 			}
+	// 			fmt.Println("Tick at", t)
+	// 		}
+	// 	}
+	// }()
+
+	// time.Sleep(1600 * time.Millisecond)
+	// ticker.Stop()
+	// done <- true
+	// fmt.Println("Ticker stopped")
+}
+
+func (tc *Tinycoin) StartMining() {
+	for {
+		if tc.StopFlg {
+			break
 		}
-	}()
+
+	}
 }
 
 func (tc *Tinycoin) GenCoinbaseTx() Transaction {
 	tx := Transaction{}
-	return tc.wallet.SignTx(tx.NewTransaction("", tc.wallet.pubKey))
+	return tc.Wallet.SignTx(tx.NewTransaction("", tc.Wallet.pubKey))
 }
 
 type Block struct {
@@ -95,19 +112,23 @@ func HashBlock(height uint, preHash string, timestamp uint, data string, nonce u
 }
 
 type Transaction struct {
-	inHash  string
-	inSig   string
-	outAddr ecdsa.PublicKey
-	hash    string
+	InHash  string
+	InSig   string
+	OutAddr ecdsa.PublicKey
+	Hash    string
 }
 
 func (t *Transaction) NewTransaction(inHash string, outAddr ecdsa.PublicKey) Transaction {
 	return Transaction{
-		inHash:  inHash,
-		outAddr: outAddr,
-		inSig:   "",
-		hash:    HashTransaction(inHash, outAddr),
+		InHash:  inHash,
+		OutAddr: outAddr,
+		InSig:   "",
+		Hash:    HashTransaction(inHash, outAddr),
 	}
+}
+
+func (t *Transaction) String() string {
+	return fmt.Sprintf("%v, %v, %v, %v", t.InHash, t.OutAddr, t.InSig, t.Hash)
 }
 
 func HashTransaction(inHash string, outAddr ecdsa.PublicKey) string {
@@ -132,7 +153,7 @@ func (tp *TxPool) BalanceOf(address ecdsa.PublicKey) int {
 	var tempTxs []Transaction
 
 	for _, unspentTx := range tp.unspentTxs {
-		if unspentTx.outAddr == address {
+		if unspentTx.OutAddr == address {
 			tempTxs = append(tempTxs, unspentTx)
 		}
 	}
@@ -145,7 +166,7 @@ func (tp *TxPool) UpdateUnspentTxs(spentTxs []Transaction) {
 		// check tx was spent
 		var index = -1
 		for i, unspentTx := range tp.unspentTxs {
-			if unspentTx.hash == spentTx.inHash {
+			if unspentTx.Hash == spentTx.InHash {
 				index = i
 			}
 		}
@@ -163,15 +184,15 @@ func (tp *TxPool) UpdateUnspentTxs(spentTxs []Transaction) {
 
 func (tp *TxPool) ValidateTx(unspentTxs []Transaction, tx Transaction) {
 	// check hash value
-	if tx.hash != HashTransaction(tx.inHash, tx.outAddr) {
-		panic(fmt.Sprintf("Invalid hash. expected: %v", HashTransaction(tx.inHash, tx.outAddr)))
+	if tx.Hash != HashTransaction(tx.InHash, tx.OutAddr) {
+		panic(fmt.Sprintf("Invalid hash. expected: %v", HashTransaction(tx.InHash, tx.OutAddr)))
 	}
 
 	// check tx whether already spent
 	var found = false
 	var exTx Transaction
 	for _, unspentTx := range unspentTxs {
-		if unspentTx.hash == tx.inHash {
+		if unspentTx.Hash == tx.InHash {
 			exTx = unspentTx
 			found = true
 			break
@@ -183,11 +204,11 @@ func (tp *TxPool) ValidateTx(unspentTxs []Transaction, tx Transaction) {
 	}
 
 	// check signature is valid
-	tp.ValidateSig(tx, exTx.outAddr)
+	tp.ValidateSig(tx, exTx.OutAddr)
 }
 
 func (tp *TxPool) ValidateSig(tx Transaction, address ecdsa.PublicKey) bool {
-	return ecdsa.VerifyASN1(&address, []byte(tx.hash), []byte(tx.inSig))
+	return ecdsa.VerifyASN1(&address, []byte(tx.Hash), []byte(tx.InSig))
 }
 
 type Wallet struct {
@@ -208,7 +229,7 @@ func (w *Wallet) SignTx(tx Transaction) Transaction {
 	if err != nil {
 		panic(err)
 	}
-	tx.inSig = string(sig)
+	tx.InSig = string(sig)
 
 	return tx
 	// fmt.Printf("signature: %x\n", sig)
