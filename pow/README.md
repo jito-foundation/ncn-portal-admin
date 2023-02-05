@@ -6,3 +6,4 @@
 
 
 ## References
+- [How to generate a new Ethereum address in Go](https://www.quicknode.com/guides/web3-sdks/how-to-generate-a-new-ethereum-address-in-go)

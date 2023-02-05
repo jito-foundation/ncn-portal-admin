@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -54,33 +55,34 @@ func (tc *Tinycoin) validBlock(block Block) {
 	}
 }
 
-func (tc *Tinycoin) GenNextBlock() {
-	// nonce := 0
-	// pre := tc.LatestBlock()
-	// conbaseTx := tc.GenCoinbaseTx()
+func (tc *Tinycoin) GenNextBlock() Block {
+	nonce := 0
+	pre := tc.LatestBlock()
+	conbaseTx := tc.GenCoinbaseTx()
 
-	// ticker := time.NewTicker(5 * time.Millisecond / 32)
-	// done := make(chan bool)
+	ticker := time.NewTicker(1 * time.Second / 32)
+	done := make(chan bool)
 
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-done:
-	// 			return
-	// 		case t := <-ticker.C:
-	// 			data := ""
-	// 			for _, tx := range tc.pool.txs {
-	// 				fmt.Sprintf("%v", tx)
-	// 			}
-	// 			fmt.Println("Tick at", t)
-	// 		}
-	// 	}
-	// }()
+	go func() {
+		for {
+			select {
+			case <-done:
+				return
+			case t := <-ticker.C:
+				data := ""
+				for _, tx := range tc.pool.txs {
+					fmt.Sprintf("%v", tx)
+				}
+				fmt.Println("Tick at", t)
+			}
+		}
+	}()
 
-	// time.Sleep(1600 * time.Millisecond)
-	// ticker.Stop()
-	// done <- true
+	time.Sleep(1 * time.Second / 32)
+	ticker.Stop()
+	done <- true
 	// fmt.Println("Ticker stopped")
+	return Block{}
 }
 
 func (tc *Tinycoin) StartMining() {
@@ -88,7 +90,9 @@ func (tc *Tinycoin) StartMining() {
 		if tc.StopFlg {
 			break
 		}
-
+		block := tc.GenNextBlock()
+		tc.AddBlock(block)
+		fmt.Printf("new block mined! block number is %d", block.height)
 	}
 }
 
