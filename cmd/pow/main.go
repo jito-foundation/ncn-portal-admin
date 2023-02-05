@@ -36,6 +36,4 @@ func main() {
 
 	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
 	fmt.Println("Address:", address)
-
-	// pow.SignTx()
 }

@@ -1,13 +1,16 @@
 package pow
 
 import (
-	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Tinycoin struct {
@@ -36,7 +39,7 @@ func (tc *Tinycoin) validBlock(block Block) {
 		panic(fmt.Sprintf("Invalid height. expected: %v", preBlock.height+1))
 	} else if preBlock.hash != block.preHash {
 		panic(fmt.Sprintf("Invalid preHash. expected: %v", preBlock.hash))
-	} else if expHash != block.hash {
+	} else if expHash.String() != block.hash {
 		panic(fmt.Sprintf("Invalid hash. expected: %v", expHash))
 	}
 
@@ -103,27 +106,23 @@ type Block struct {
 	hash      string
 }
 
-func HashBlock(height uint, preHash string, timestamp uint, data string, nonce uint) string {
-	h := crypto.SHA256.New()
-
-	h.Write([]byte(fmt.Sprintf("%v,%v,%v,%v,%v", height, preHash, timestamp, data, nonce)))
-
-	return fmt.Sprintf("%x", h.Sum(nil))
+func HashBlock(height uint, preHash string, timestamp uint, data string, nonce uint) common.Hash {
+	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v,%v,%v,%v", height, preHash, timestamp, data, nonce)))
 }
 
 type Transaction struct {
 	InHash  string
 	InSig   string
-	OutAddr ecdsa.PublicKey
+	OutAddr string
 	Hash    string
 }
 
-func (t *Transaction) NewTransaction(inHash string, outAddr ecdsa.PublicKey) Transaction {
+func (t *Transaction) NewTransaction(inHash string, outAddr string) Transaction {
 	return Transaction{
 		InHash:  inHash,
 		OutAddr: outAddr,
 		InSig:   "",
-		Hash:    HashTransaction(inHash, outAddr),
+		Hash:    HashTransaction(inHash, outAddr).String(),
 	}
 }
 
@@ -131,12 +130,8 @@ func (t *Transaction) String() string {
 	return fmt.Sprintf("%v, %v, %v, %v", t.InHash, t.OutAddr, t.InSig, t.Hash)
 }
 
-func HashTransaction(inHash string, outAddr ecdsa.PublicKey) string {
-	h := crypto.SHA256.New()
-
-	h.Write([]byte(fmt.Sprintf("%v,%v", inHash, outAddr)))
-
-	return fmt.Sprintf("%x", h.Sum(nil))
+func HashTransaction(inHash string, outAddr string) common.Hash {
+	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v", inHash, outAddr)))
 }
 
 type TxPool struct {
@@ -149,7 +144,7 @@ func (tp *TxPool) AddTx(newTx Transaction) {
 	tp.txs = append(tp.txs, newTx)
 }
 
-func (tp *TxPool) BalanceOf(address ecdsa.PublicKey) int {
+func (tp *TxPool) BalanceOf(address string) int {
 	var tempTxs []Transaction
 
 	for _, unspentTx := range tp.unspentTxs {
@@ -184,7 +179,7 @@ func (tp *TxPool) UpdateUnspentTxs(spentTxs []Transaction) {
 
 func (tp *TxPool) ValidateTx(unspentTxs []Transaction, tx Transaction) {
 	// check hash value
-	if tx.Hash != HashTransaction(tx.InHash, tx.OutAddr) {
+	if tx.Hash != HashTransaction(tx.InHash, tx.OutAddr).String() {
 		panic(fmt.Sprintf("Invalid hash. expected: %v", HashTransaction(tx.InHash, tx.OutAddr)))
 	}
 
@@ -207,13 +202,24 @@ func (tp *TxPool) ValidateTx(unspentTxs []Transaction, tx Transaction) {
 	tp.ValidateSig(tx, exTx.OutAddr)
 }
 
-func (tp *TxPool) ValidateSig(tx Transaction, address ecdsa.PublicKey) bool {
-	return ecdsa.VerifyASN1(&address, []byte(tx.Hash), []byte(tx.InSig))
+func (tp *TxPool) ValidateSig(tx Transaction, address string) bool {
+	publicKeyBytes, err := hexutil.Decode(address)
+	if err != nil {
+		fmt.Printf("Fail to decode address")
+		return false
+	}
+
+	pubKey, err := crypto.ToECDSA(publicKeyBytes)
+	if err != nil {
+		fmt.Printf("Fail to ECDSA")
+		return false
+	}
+	return ecdsa.VerifyASN1(&pubKey.PublicKey, []byte(tx.Hash), []byte(tx.InSig))
 }
 
 type Wallet struct {
 	priKey ecdsa.PrivateKey
-	pubKey ecdsa.PublicKey
+	pubKey string
 }
 
 func (w *Wallet) SignTx(tx Transaction) Transaction {
