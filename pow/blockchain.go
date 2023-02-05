@@ -2,10 +2,12 @@ package pow
 
 import (
 	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"strings"
-
-	ecies "github.com/ecies/go/v2"
 )
 
 type Tinycoin struct {
@@ -49,11 +51,11 @@ func (tc *Tinycoin) validBlock(block Block) {
 	}
 }
 
-func (tc *Tinycoin) GenNextBlock() {
-	nonce := 0
-	pre := tc.LatestBlock()
-	conbaseTx
-}
+// func (tc *Tinycoin) GenNextBlock() {
+// 	nonce := 0
+// 	pre := tc.LatestBlock()
+// 	conbaseTx
+// }
 
 type Block struct {
 	height    uint
@@ -75,14 +77,29 @@ func HashBlock(height uint, preHash string, timestamp uint, data string, nonce u
 type TxPool struct{}
 
 type Wallet struct {
-	priKey ecies.PrivateKey
-	pubKey ecies.PublicKey
+	priKey ecdsa.PrivateKey
+	pubKey ecdsa.PublicKey
 }
 
-func (w *Wallet) SignTx() {
+func SignTx() {
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
 
+	msg := "hello, world"
+	hash := sha256.Sum256([]byte(msg))
+
+	sig, err := ecdsa.SignASN1(rand.Reader, privateKey, hash[:])
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("signature: %x\n", sig)
+
+	valid := ecdsa.VerifyASN1(&privateKey.PublicKey, hash[:], sig)
+	fmt.Println("signature verified:", valid)
 }
 
-func toHexString(bytes []byte) string {
+// func toHexString(bytes []byte) string {
 
-}
+// }
