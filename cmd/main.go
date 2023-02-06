@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/Aoi1011/tinychain/cmd/pow"
 )
 
 type Student struct {
@@ -17,7 +19,7 @@ func main() {
 
 	switch command {
 	case "wallet":
-		fmt.Printf("%s", command)
+		pow.CreateNewWallet()
 	case "balance":
 		fmt.Printf("%s", command)
 	case "transfer":

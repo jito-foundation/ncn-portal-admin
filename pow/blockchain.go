@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -122,7 +123,7 @@ func (tc *Tinycoin) StartMining() {
 
 func (tc *Tinycoin) GenCoinbaseTx() Transaction {
 	tx := Transaction{}
-	return tc.Wallet.SignTx(tx.NewTransaction("", tc.Wallet.pubKey))
+	return tc.Wallet.SignTx(tx.NewTransaction("", tc.Wallet.PubKey))
 }
 
 type Block struct {
@@ -246,8 +247,26 @@ func (tp *TxPool) ValidateSig(tx Transaction, address string) bool {
 }
 
 type Wallet struct {
-	priKey ecdsa.PrivateKey
-	pubKey string
+	PriKey ecdsa.PrivateKey
+	PubKey string
+}
+
+func (w *Wallet) New() {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *esdsa.PublicKey")
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+
+	w.PriKey = *privateKey
+	w.PubKey = hexutil.Encode(publicKeyBytes)
 }
 
 func (w *Wallet) SignTx(tx Transaction) Transaction {

@@ -1,1 +1,7 @@
-/target
+release/
+.idea/
+.vscode/
+.DS_Store
+
+# private key
+/wallet
