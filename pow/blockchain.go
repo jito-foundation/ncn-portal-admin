@@ -34,34 +34,31 @@ func (tc *Tinycoin) AddBlock(newBlock Block) {
 
 func (tc *Tinycoin) validBlock(block Block) {
 	preBlock := tc.LatestBlock()
-	expHash := HashBlock(block.height, block.preHash, block.timestamp, block.data, block.nonce)
+	expHash := HashBlock(block.Height, block.PreHash, block.Timestamp, block.Data, block.Nonce)
 
-	if preBlock.height+1 != block.height {
-		panic(fmt.Sprintf("Invalid height. expected: %v", preBlock.height+1))
-	} else if preBlock.hash != block.preHash {
-		panic(fmt.Sprintf("Invalid preHash. expected: %v", preBlock.hash))
-	} else if expHash.String() != block.hash {
+	if preBlock.Height+1 != block.Height {
+		panic(fmt.Sprintf("Invalid height. expected: %v", preBlock.Height+1))
+	} else if preBlock.Hash != block.PreHash {
+		panic(fmt.Sprintf("Invalid preHash. expected: %v", preBlock.Hash))
+	} else if expHash.String() != block.Hash {
 		panic(fmt.Sprintf("Invalid hash. expected: %v", expHash))
 	}
 
-	for i, val := range block.hash {
-		if val != rune(0) {
-			panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.Difficulty))))
-		}
-
-		if uint(i)+1 > tc.Difficulty {
-			break
-		}
+	ok := checkHash(block, tc.Difficulty)
+	if !ok {
+		panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.Difficulty))))
 	}
 }
 
 func (tc *Tinycoin) GenNextBlock() Block {
-	nonce := 0
+	var nonce uint = 0
 	pre := tc.LatestBlock()
-	conbaseTx := tc.GenCoinbaseTx()
+	coinbaseTx := tc.GenCoinbaseTx()
 
 	ticker := time.NewTicker(1 * time.Second / 32)
 	done := make(chan bool)
+
+	var block = Block{}
 
 	go func() {
 		for {
@@ -70,19 +67,46 @@ func (tc *Tinycoin) GenNextBlock() Block {
 				return
 			case t := <-ticker.C:
 				data := ""
-				for _, tx := range tc.pool.txs {
-					fmt.Sprintf("%v", tx)
+				block = Block{
+					Height:    pre.Height + 1,
+					PreHash:   pre.Hash,
+					Timestamp: time.Now(),
+					Data:      data,
+					Nonce:     nonce,
 				}
+
+				ok := checkHash(block, tc.Difficulty)
+				if ok {
+					spentTxs := tc.Pool.txs
+					emptyPool := make([]Transaction, len(tc.Pool.txs))
+					tc.Pool.txs = emptyPool
+					tc.Pool.UpdateUnspentTxs(spentTxs)
+					tc.Pool.unspentTxs = append(tc.Pool.unspentTxs, coinbaseTx)
+					done <- true
+				}
+				nonce += 1
 				fmt.Println("Tick at", t)
 			}
 		}
 	}()
 
-	time.Sleep(1 * time.Second / 32)
-	ticker.Stop()
-	done <- true
-	// fmt.Println("Ticker stopped")
-	return Block{}
+	// time.Sleep(1 * time.Second / 32)
+	// ticker.Stop()
+
+	return block
+}
+
+func checkHash(block Block, difficulty uint) bool {
+	for i, val := range block.Hash {
+		if val != rune(0) {
+			return false
+		}
+
+		if uint(i)+1 > difficulty {
+			break
+		}
+	}
+	return true
 }
 
 func (tc *Tinycoin) StartMining() {
@@ -92,7 +116,7 @@ func (tc *Tinycoin) StartMining() {
 		}
 		block := tc.GenNextBlock()
 		tc.AddBlock(block)
-		fmt.Printf("new block mined! block number is %d", block.height)
+		fmt.Printf("new block mined! block number is %d", block.Height)
 	}
 }
 
@@ -102,15 +126,15 @@ func (tc *Tinycoin) GenCoinbaseTx() Transaction {
 }
 
 type Block struct {
-	height    uint
-	preHash   string
-	timestamp uint
-	data      string
-	nonce     uint
-	hash      string
+	Height    uint
+	PreHash   string
+	Timestamp time.Time
+	Data      string
+	Nonce     uint
+	Hash      string
 }
 
-func HashBlock(height uint, preHash string, timestamp uint, data string, nonce uint) common.Hash {
+func HashBlock(height uint, preHash string, timestamp time.Time, data string, nonce uint) common.Hash {
 	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v,%v,%v,%v", height, preHash, timestamp, data, nonce)))
 }
 
