@@ -1,12 +1,8 @@
 package main
 
 import (
-	"crypto/ecdsa"
 	"fmt"
-	"log"
-
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
+	"os"
 )
 
 type Student struct {
@@ -17,23 +13,16 @@ type Student struct {
 }
 
 func main() {
-	privateKey, err := crypto.GenerateKey()
-	if err != nil {
-		fmt.Printf("%v", err)
+	command := os.Args[1]
+
+	switch command {
+	case "wallet":
+		fmt.Printf("%s", command)
+	case "balance":
+		fmt.Printf("%s", command)
+	case "transfer":
+		fmt.Printf("%s", command)
+	default:
+		fmt.Printf("Type again")
 	}
-
-	privateKeyBytes := crypto.FromECDSA(privateKey)
-	fmt.Println("SAVE BUT DO NOT SHARE THIS (Private Key):", hexutil.Encode(privateKeyBytes))
-
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		log.Fatal("cannot assert type: publicKey is not of type *esdsa.PublicKey")
-	}
-
-	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	fmt.Println("Public Key: ", hexutil.Encode(publicKeyBytes))
-
-	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
-	fmt.Println("Address:", address)
 }
