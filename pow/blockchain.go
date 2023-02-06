@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -140,10 +141,10 @@ func HashBlock(height uint, preHash string, timestamp time.Time, data string, no
 }
 
 type Transaction struct {
-	InHash  string
-	InSig   string
-	OutAddr string
-	Hash    string
+	InHash  string `json:"InHash"`
+	InSig   string `json:"InSig"`
+	OutAddr string `json:"OutAddr"`
+	Hash    string `json:"Hash"`
 }
 
 func (t *Transaction) NewTransaction(inHash string, outAddr string) Transaction {
@@ -156,7 +157,11 @@ func (t *Transaction) NewTransaction(inHash string, outAddr string) Transaction 
 }
 
 func (t *Transaction) String() string {
-	return fmt.Sprintf("%v, %v, %v, %v", t.InHash, t.OutAddr, t.InSig, t.Hash)
+	txBytes, err := json.Marshal(t)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(txBytes)
 }
 
 func HashTransaction(inHash string, outAddr string) common.Hash {
@@ -247,8 +252,8 @@ func (tp *TxPool) ValidateSig(tx Transaction, address string) bool {
 }
 
 type Wallet struct {
-	PriKey ecdsa.PrivateKey
-	PubKey string
+	PriKey ecdsa.PrivateKey `json:"PriKey"`
+	PubKey string           `json:"PubKey"`
 }
 
 func (w *Wallet) New() {
