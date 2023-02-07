@@ -24,6 +24,17 @@ type Tinycoin struct {
 	StopFlg    bool
 }
 
+func NewTinycoin(wallet Wallet, difficulty uint) *Tinycoin {
+	return &Tinycoin{
+		Blocks:     []Block{*NewBlock()},
+		Pool:       *NewTxPool(),
+		Wallet:     wallet,
+		Difficulty: difficulty,
+		StopFlg:    false,
+	}
+
+}
+
 func (tc *Tinycoin) LatestBlock() Block {
 	len := len(tc.Blocks)
 	return tc.Blocks[len-1]
@@ -136,6 +147,17 @@ type Block struct {
 	Hash      string
 }
 
+func NewBlock() *Block {
+	return &Block{
+		Height:    0,
+		PreHash:   "0",
+		Timestamp: time.Now(),
+		Data:      "{}",
+		Nonce:     0,
+		Hash:      HashBlock(0, "0", time.Now(), "{}", 0).String(),
+	}
+}
+
 func HashBlock(height uint, preHash string, timestamp time.Time, data string, nonce uint) common.Hash {
 	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v,%v,%v,%v", height, preHash, timestamp, data, nonce)))
 }
@@ -171,6 +193,13 @@ func HashTransaction(inHash string, outAddr string) common.Hash {
 type TxPool struct {
 	txs        []Transaction
 	unspentTxs []Transaction
+}
+
+func NewTxPool() *TxPool {
+	return &TxPool{
+		txs:        []Transaction{},
+		unspentTxs: []Transaction{},
+	}
 }
 
 func (tp *TxPool) AddTx(newTx Transaction) {
