@@ -21,7 +21,7 @@ func main() {
 	case "wallet":
 		pow.CreateNewWallet()
 	case "balance":
-		fmt.Printf("%s", command)
+		pow.ShowBalance("Hello")
 	case "transfer":
 		fmt.Printf("%s", command)
 	default:
