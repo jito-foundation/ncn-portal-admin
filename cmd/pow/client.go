@@ -49,20 +49,7 @@ func ShowBalance(addr string) {
 }
 
 func Transfer() {
-
-}
-
-func readWallet() {
-	content, err := ioutil.ReadFile("wallet/wallet.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	wallet := pow.Wallet{}
-	err = json.Unmarshal(content, &wallet)
-	if err != nil {
-		log.Fatal(err)
-	}
+	wallet := readWallet()
 
 	requestURL := fmt.Sprintf("http://localhost:3000/unspentTxs")
 	res, err := http.Get(requestURL)
@@ -105,4 +92,19 @@ func readWallet() {
 	}
 
 	fmt.Printf("Response: %s", response.Status)
+}
+
+func readWallet() pow.Wallet {
+	content, err := ioutil.ReadFile("wallet/wallet.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	wallet := pow.Wallet{}
+	err = json.Unmarshal(content, &wallet)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return wallet
 }
