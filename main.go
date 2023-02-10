@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -9,175 +8,187 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
+const difficulty = 1
+
 type Block struct {
-	Pos       int
-	Data      BookCheckout
-	Timestamp string
-	Hash      string
-	PrevHash  string
+	Index      int
+	Timestamp  string
+	Data       int
+	Hash       string
+	PrevHash   string
+	Difficulty int
+	Nonce      string
 }
 
-func GenesisBlock() *Block {
-	return CreateBlock(&Block{}, BookCheckout{IsGenesis: true})
+var Blockchain []Block
+
+type Message struct {
+	Data int
 }
 
-func (b *Block) generateHash() {
-	bytes, _ := json.Marshal(b.Data)
-
-	data := fmt.Sprintf("%d", b.Pos) + b.Timestamp + string(bytes) + b.PrevHash
-
-	hash := sha256.New()
-	hash.Write([]byte(data))
-	b.Hash = hex.EncodeToString(hash.Sum(nil))
-}
-
-type BookCheckout struct {
-	BookID       string `json:"book_id"`
-	User         string `json:"user"`
-	CheckoutDate string `json:"checkout_db"`
-	IsGenesis    bool   `json:"is_genesis"`
-}
-
-type Book struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Author      string `json:"author"`
-	PublishDate string `json:"publish_date"`
-	Isbn        string `json:"isbn"`
-}
-
-type Blockchain struct {
-	blocks []*Block
-}
-
-var BlockChain *Blockchain
-
-func NewBlockchain() *Blockchain {
-	return &Blockchain{
-		[]*Block{GenesisBlock()},
-	}
-}
-
-func CreateBlock(prevBlock *Block, checkoutitem BookCheckout) *Block {
-	block := &Block{}
-	block.Pos = prevBlock.Pos + 1
-	block.Timestamp = time.Now().String()
-	block.PrevHash = prevBlock.Hash
-	block.generateHash()
-
-	return block
-}
-
-func (bc *Blockchain) AddBlock(data BookCheckout) {
-	prevBlock := bc.blocks[len(bc.blocks)-1]
-
-	block := CreateBlock(prevBlock, data)
-
-	if validBlock(block, prevBlock) {
-		bc.blocks = append(bc.blocks, block)
-	}
-}
-
-func validBlock(block, prevBlock *Block) bool {
-	if prevBlock.Hash != block.PrevHash {
-		return false
-	}
-
-	if !block.validateHash(block.Hash) {
-		return false
-	}
-
-	if prevBlock.Pos != block.Pos-1 {
-		return false
-	}
-
-	return true
-}
-
-func (b *Block) validateHash(hash string) bool {
-	b.generateHash()
-	if b.Hash != hash {
-		return false
-	}
-
-	return true
-}
-
-func getBlockchain(w http.ResponseWriter, r *http.Request) {
-	jBytes, err := json.MarshalIndent(BlockChain.blocks, "", " ")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
-		return
-	}
-	io.WriteString(w, string(jBytes))
-}
-
-func writeBlock(w http.ResponseWriter, r *http.Request) {
-	var checkoutItem BookCheckout
-
-	if err := json.NewDecoder(r.Body).Decode(&checkoutItem); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("invalid data: %v", err)
-		w.Write([]byte("invalid data"))
-		return
-	}
-
-	BlockChain.AddBlock(checkoutItem)
-}
-
-// create a new book
-// return new book with new id
-func newBook(w http.ResponseWriter, r *http.Request) {
-	var book Book
-
-	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("could not create:%v", err)
-		w.Write([]byte("could not create new book"))
-		return
-	}
-
-	h := md5.New()
-	io.WriteString(h, book.Isbn+book.PublishDate)
-	book.ID = fmt.Sprintf("%x", h.Sum(nil))
-
-	resp, err := json.MarshalIndent(book, "", " ")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("could not marshal payload: %v", err)
-		w.Write([]byte("could not save data"))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
-}
+var mutex = &sync.Mutex{}
 
 func main() {
-	BlockChain = NewBlockchain()
-	r := mux.NewRouter()
-	r.HandleFunc("/", getBlockchain).Methods("GET")
-	r.HandleFunc("/", writeBlock).Methods("POST")
-	r.HandleFunc("/new", newBook).Methods("POST")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go func() {
-		for _, block := range BlockChain.blocks {
-			fmt.Printf("Prev. hash: %x\n", block.PrevHash)
-			bytes, _ := json.MarshalIndent(block.Data, "", " ")
-			fmt.Printf("Data:%v\n", string(bytes))
-			fmt.Printf("Hash:%x\n", block.Hash)
-			fmt.Println()
-		}
+		t := time.Now()
+		genesisBlock := Block{}
+		genesisBlock = Block{0, t.String(), 0, calculateHash(genesisBlock), "", difficulty, ""}
+		spew.Dump(genesisBlock)
+
+		mutex.Lock()
+		Blockchain = append(Blockchain, genesisBlock)
+		mutex.Unlock()
 	}()
 
-	log.Println("Listening on port 3000")
+	log.Fatal(run())
+}
 
-	log.Fatal(http.ListenAndServe(":3000", r))
+func run() error {
+	mux := makeMuxRouter()
+	httpPort := os.Getenv("PORT")
+
+	log.Println("Listening on port: ", httpPort)
+	s := http.Server{
+		Addr:           ":" + httpPort,
+		Handler:        mux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	if err := s.ListenAndServe(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func makeMuxRouter() http.Handler {
+	muxRouter := mux.NewRouter()
+	muxRouter.HandleFunc("/", handleGetBlockchain).Methods("GET")
+	muxRouter.HandleFunc("/", handleWriteBlock).Methods("POST")
+
+	return muxRouter
+}
+
+func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
+	bytes, err := json.MarshalIndent(Blockchain, "", " ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w, string(bytes))
+}
+
+func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var m Message
+
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		respondWithJson(w, r, http.StatusBadRequest, r.Body)
+		return
+	}
+	defer r.Body.Close()
+
+	mutex.Lock()
+	newBlock := generateBlock(Blockchain[len(Blockchain)-1], m.Data)
+	mutex.Unlock()
+
+	if isBlockValid(newBlock, Blockchain[len(Blockchain)-1]) {
+		spew.Dump(Blockchain)
+	}
+
+	respondWithJson(w, r, http.StatusCreated, newBlock)
+}
+
+func respondWithJson(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	res, err := json.MarshalIndent(payload, "", " ")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("HTTP 500: Internal Server Error"))
+		return
+	}
+	w.WriteHeader(code)
+	w.Write(res)
+}
+
+func isBlockValid(newBlock, oldBlock Block) bool {
+	if oldBlock.Index+1 != newBlock.Index {
+		return false
+	}
+
+	if oldBlock.Hash != newBlock.PrevHash {
+		return false
+	}
+
+	if calculateHash(newBlock) != newBlock.Hash {
+		return false
+	}
+
+	return true
+}
+
+func calculateHash(block Block) string {
+	record := strconv.Itoa(block.Index) +
+		block.Timestamp +
+		strconv.Itoa(block.Data) +
+		block.PrevHash + block.Nonce
+
+	h := sha256.New()
+	h.Write([]byte(record))
+	hashed := h.Sum(nil)
+
+	return hex.EncodeToString(hashed)
+}
+
+func generateBlock(oldBlock Block, Data int) Block {
+	var newBlock Block
+	t := time.Now()
+
+	newBlock.Index = oldBlock.Index + 1
+	newBlock.Timestamp = t.String()
+	newBlock.Data = Data
+	newBlock.Difficulty = difficulty
+
+	for i := 0; ; i++ {
+		hex := fmt.Sprintf("%x", i)
+		newBlock.Nonce = hex
+		if !isHashValid(calculateHash(newBlock), newBlock.Difficulty) {
+			fmt.Println(calculateHash(newBlock), "have to work more")
+			time.Sleep(time.Second)
+			continue
+		} else {
+			fmt.Println(calculateHash(newBlock), "well done!")
+			newBlock.Hash = calculateHash(newBlock)
+			break
+		}
+	}
+
+	return newBlock
+}
+
+func isHashValid(hash string, difficulty int) bool {
+	// 0, 1 => 0 (prefix)
+	// 0, 2 => 00 (prefix)
+	prefix := strings.Repeat("0", difficulty)
+
+	return strings.HasPrefix(hash, prefix)
 }

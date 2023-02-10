@@ -5,3 +5,6 @@ release/
 
 # private key
 /wallet
+
+# environment variable
+.env
