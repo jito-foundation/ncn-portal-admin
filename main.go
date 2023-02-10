@@ -29,7 +29,7 @@ func GenesisBlock() *Block {
 func (b *Block) generateHash() {
 	bytes, _ := json.Marshal(b.Data)
 
-	data := string(b.Pos) + b.Timestamp + string(bytes) + b.PrevHash
+	data := fmt.Sprintf("%d", b.Pos) + b.Timestamp + string(bytes) + b.PrevHash
 
 	hash := sha256.New()
 	hash.Write([]byte(data))
@@ -48,7 +48,7 @@ type Book struct {
 	Title       string `json:"title"`
 	Author      string `json:"author"`
 	PublishDate string `json:"publish_date"`
-	ISBN        string `json:isbn`
+	Isbn        string `json:"isbn"`
 }
 
 type Blockchain struct {
@@ -144,7 +144,7 @@ func newBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h := md5.New()
-	io.WriteString(h, book.ISBN+book.PublishDate)
+	io.WriteString(h, book.Isbn+book.PublishDate)
 	book.ID = fmt.Sprintf("%x", h.Sum(nil))
 
 	resp, err := json.MarshalIndent(book, "", " ")
