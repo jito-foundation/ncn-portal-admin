@@ -115,6 +115,8 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		spew.Dump(Blockchain)
 	}
 
+	Blockchain = append(Blockchain, newBlock)
+
 	respondWithJson(w, r, http.StatusCreated, newBlock)
 }
 
