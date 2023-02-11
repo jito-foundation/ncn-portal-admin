@@ -1,107 +1,123 @@
 package pow
 
+import (
+	"fmt"
+	"log"
+
+	"github.com/boltdb/bolt"
+)
+
+const dbFile = "blockchain.db"
+const blocksBucket = "blocks"
+
 type PowBlockchain struct {
-	Blocks []*Block
+	Tip []byte
+	DB  *bolt.DB
 }
 
-func NewPowBlockchain() *PowBlockchain {
-	return &PowBlockchain{
-		[]*Block{NewGenesisBlock()},
-	}
+type BlockchainIterator struct {
+	CurrentHash []byte
+	DB          *bolt.DB
 }
 
 func (bc *PowBlockchain) AddBlock(data string) {
-	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(data, prevBlock.PrevBlockHash)
-	bc.Blocks = append(bc.Blocks, newBlock)
+	var lastHash []byte
+
+	err := bc.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		lastHash = b.Get([]byte("l"))
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	newBlock := NewBlock(data, lastHash)
+
+	err = bc.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		if err != nil {
+			log.Panic(err)
+		}
+		err = b.Put([]byte("l"), newBlock.Hash)
+		if err != nil {
+			log.Panic(err)
+		}
+		bc.Tip = newBlock.Hash
+
+		return nil
+	})
+	// prevBlock := bc.Blocks[len(bc.Blocks)-1]
+	// newBlock := NewBlock(data, prevBlock.PrevBlockHash)
+	// bc.Blocks = append(bc.Blocks, newBlock)
 }
 
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func (bc *PowBlockchain) Iterator() *BlockchainIterator {
+	bci := &BlockchainIterator{bc.Tip, bc.DB}
+	return bci
 }
 
-func (tc *PowBlockchain) validBlock(block Block) {
-	// preBlock := tc.Blocks[len(tc.Blocks)-1]
-	// block.SetHash()
+func (i *BlockchainIterator) Next() *Block {
+	var block *Block
 
-	// if preBlock.Hash != block.PrevBlockHash {
-	// 	panic(fmt.Sprintf("Invalid preHash. expected: %v", preBlock.Hash))
-	// } else if expHash.String() != block.Hash {
-	// 	panic(fmt.Sprintf("Invalid hash. expected: %v", expHash))
-	// }
+	err := i.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		encodedBlock := b.Get(i.CurrentHash)
+		block = DeserializeBlock(encodedBlock)
 
-	// ok := checkHash(block, tc.Difficulty)
-	// if !ok {
-	// 	panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.Difficulty))))
-	// }
-}
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
 
-func (tc *PowBlockchain) GenNextBlock() Block {
-	// var nonce uint = 0
-	// pre := tc.LatestBlock()
-	// coinbaseTx := tc.GenCoinbaseTx()
-
-	// ticker := time.NewTicker(1 * time.Second / 32)
-	// done := make(chan bool)
-
-	var block = Block{}
-
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-done:
-	// 			return
-	// 		case t := <-ticker.C:
-	// 			data := ""
-	// 			block = Block{
-	// 				Height:    pre.Height + 1,
-	// 				PreHash:   pre.Hash,
-	// 				Timestamp: time.Now(),
-	// 				Data:      data,
-	// 				Nonce:     nonce,
-	// 			}
-
-	// 			ok := checkHash(block, tc.Difficulty)
-	// 			if ok {
-	// 				spentTxs := tc.Pool.txs
-	// 				emptyPool := make([]Transaction, len(tc.Pool.txs))
-	// 				tc.Pool.txs = emptyPool
-	// 				tc.Pool.UpdateUnspentTxs(spentTxs)
-	// 				tc.Pool.unspentTxs = append(tc.Pool.unspentTxs, coinbaseTx)
-	// 				done <- true
-	// 			}
-	// 			nonce += 1
-	// 			fmt.Println("Tick at", t)
-	// 		}
-	// 	}
-	// }()
-
-	// time.Sleep(1 * time.Second / 32)
-	// ticker.Stop()
+	i.CurrentHash = block.PrevBlockHash
 
 	return block
 }
 
-func checkHash(block Block, difficulty uint) bool {
-	// prefix := strings.Repeat("0", int(difficulty))
+func NewPowBlockchain() *PowBlockchain {
+	var tip []byte
+	// open a BoltDB file
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Panic(err)
+	}
 
-	// return strings.HasPrefix(block.Hash, prefix)
-	return true
-}
+	err = db.Update(func(tx *bolt.Tx) error {
+		// open a read-write tx
+		b := tx.Bucket([]byte(blocksBucket))
 
-func (tc *PowBlockchain) StartMining() {
-	// for {
-	// 	if tc.StopFlg {
-	// 		break
-	// 	}
-	// 	block := tc.GenNextBlock()
-	// 	tc.AddBlock(block)
-	// 	fmt.Printf("new block mined! block number is %d", block.Height)
-	// }
-}
+		if b == nil {
+			fmt.Println("No existing blockchain found. Creating a new one...")
+			genesis := NewGenesisBlock()
 
-func (tc *PowBlockchain) GenCoinbaseTx() Transaction {
-	tx := Transaction{}
-	// return tc.Wallet.SignTx(tx.NewTransaction("", tc.Wallet.PubKey))
-	return tx
+			b, err := tx.CreateBucket([]byte(blocksBucket))
+			if err != nil {
+				log.Panic(err)
+			}
+
+			err = b.Put(genesis.Hash, genesis.Serialize())
+			if err != nil {
+				log.Panic(err)
+			}
+
+			err = b.Put([]byte("l"), genesis.Hash)
+			if err != nil {
+				log.Panic(err)
+			}
+
+			tip = genesis.Hash
+		} else {
+			tip = b.Get([]byte("l"))
+		}
+
+		return nil
+	})
+
+	bc := PowBlockchain{tip, db}
+
+	return &bc
 }

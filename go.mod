@@ -6,6 +6,7 @@ require github.com/ethereum/go-ethereum v1.10.17
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
@@ -29,5 +30,5 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
-	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
+	golang.org/x/sys v0.5.0 // indirect
 )
