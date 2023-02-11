@@ -49,9 +49,6 @@ func (bc *PowBlockchain) AddBlock(data string) {
 
 		return nil
 	})
-	// prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	// newBlock := NewBlock(data, prevBlock.PrevBlockHash)
-	// bc.Blocks = append(bc.Blocks, newBlock)
 }
 
 func (bc *PowBlockchain) Iterator() *BlockchainIterator {
