@@ -8,3 +8,6 @@ release/
 
 # environment variable
 .env
+
+# DB
+blockchain.db
