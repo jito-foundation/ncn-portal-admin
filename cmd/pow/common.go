@@ -1,24 +1,16 @@
 package main
 
-import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
+// func readWallet() pow.Wallet {
+// 	content, err := ioutil.ReadFile("wallet/wallet.json")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	"github.com/Aoi1011/tinychain/pow"
-)
+// 	wallet := pow.Wallet{}
+// 	err = json.Unmarshal(content, &wallet)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-func readWallet() pow.Wallet {
-	content, err := ioutil.ReadFile("wallet/wallet.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	wallet := pow.Wallet{}
-	err = json.Unmarshal(content, &wallet)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return wallet
-}
+// 	return wallet
+// }

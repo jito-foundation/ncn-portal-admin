@@ -1,40 +1,33 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
-
-	"github.com/Aoi1011/tinychain/pow"
 )
 
 func CreateNewWallet() {
-	wallet := pow.Wallet{}
-	wallet.New()
+	// wallet := pow.Wallet{}
+	// wallet.New()
 
-	fmt.Printf("wallet address is %s", wallet.PubKey)
+	// fmt.Printf("wallet address is %s", wallet.PubKey)
 
-	if err := os.Mkdir("wallet", os.ModePerm); err != nil {
-		log.Fatal(err)
-	}
-	_, err := os.Create("wallet/wallet.json")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// if err := os.Mkdir("wallet", os.ModePerm); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// _, err := os.Create("wallet/wallet.json")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	content, err := json.Marshal(wallet)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// content, err := json.Marshal(wallet)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
-	err = ioutil.WriteFile("wallet/wallet.json", content, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err = ioutil.WriteFile("wallet/wallet.json", content, 0644)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 func ShowBalance(addr string) {
@@ -49,47 +42,47 @@ func ShowBalance(addr string) {
 }
 
 func Transfer() {
-	wallet := readWallet()
+	// wallet := readWallet()
 
-	requestURL := fmt.Sprintf("http://localhost:3000/unspentTxs")
-	res, err := http.Get(requestURL)
-	if err != nil {
-		fmt.Printf("error making http request: %s\n", err)
-	}
+	// requestURL := fmt.Sprintf("http://localhost:3000/unspentTxs")
+	// res, err := http.Get(requestURL)
+	// if err != nil {
+	// 	fmt.Printf("error making http request: %s\n", err)
+	// }
 
-	defer res.Body.Close()
+	// defer res.Body.Close()
 
-	txs := []pow.Transaction{}
-	err = json.NewDecoder(res.Body).Decode(&txs)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// txs := []pow.Transaction{}
+	// err = json.NewDecoder(res.Body).Decode(&txs)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	var unspentTx pow.Transaction
-	for _, tx := range txs {
-		if tx.OutAddr == wallet.PubKey {
-			unspentTx = tx
-		}
-	}
+	// var unspentTx pow.Transaction
+	// for _, tx := range txs {
+	// 	if tx.OutAddr == wallet.PubKey {
+	// 		unspentTx = tx
+	// 	}
+	// }
 
-	requestURL = fmt.Sprintf("http://localhost:3000/sendTransaction")
-	txBytes, err := json.Marshal(unspentTx)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// requestURL = fmt.Sprintf("http://localhost:3000/sendTransaction")
+	// txBytes, err := json.Marshal(unspentTx)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	r, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(txBytes))
-	if err != nil {
-		panic(err)
-	}
+	// r, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(txBytes))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	r.Header.Add("Content-Type", "application/json")
+	// r.Header.Add("Content-Type", "application/json")
 
-	client := http.Client{}
-	response, err := client.Do(r)
-	if err != nil {
-		panic(err)
-	}
+	// client := http.Client{}
+	// response, err := client.Do(r)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	fmt.Printf("Response: %s", response.Status)
+	// fmt.Printf("Response: %s", response.Status)
 }
