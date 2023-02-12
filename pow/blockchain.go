@@ -76,7 +76,7 @@ func (i *BlockchainIterator) Next() *Block {
 	return block
 }
 
-func NewPowBlockchain(address string) *PowBlockchain {
+func CreateBlockchain(address string) *PowBlockchain {
 	var tip []byte
 	// open a BoltDB file
 	db, err := bolt.Open(dbFile, 0600, nil)
