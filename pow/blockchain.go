@@ -9,6 +9,7 @@ import (
 
 const dbFile = "blockchain.db"
 const blocksBucket = "blocks"
+const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 type PowBlockchain struct {
 	Tip []byte
@@ -20,7 +21,7 @@ type BlockchainIterator struct {
 	DB          *bolt.DB
 }
 
-func (bc *PowBlockchain) AddBlock(data string) {
+func (bc *PowBlockchain) AddBlock(transactions []*Transaction) {
 	var lastHash []byte
 
 	err := bc.DB.View(func(tx *bolt.Tx) error {
@@ -33,7 +34,7 @@ func (bc *PowBlockchain) AddBlock(data string) {
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(data, lastHash)
+	newBlock := NewBlock(transactions, lastHash)
 
 	err = bc.DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
@@ -75,7 +76,7 @@ func (i *BlockchainIterator) Next() *Block {
 	return block
 }
 
-func NewPowBlockchain() *PowBlockchain {
+func NewPowBlockchain(address string) *PowBlockchain {
 	var tip []byte
 	// open a BoltDB file
 	db, err := bolt.Open(dbFile, 0600, nil)
@@ -89,7 +90,8 @@ func NewPowBlockchain() *PowBlockchain {
 
 		if b == nil {
 			fmt.Println("No existing blockchain found. Creating a new one...")
-			genesis := NewGenesisBlock()
+			cbtx := NewCoinbaseTx(address, genesisCoinbaseData)
+			genesis := NewGenesisBlock(cbtx)
 
 			b, err := tx.CreateBucket([]byte(blocksBucket))
 			if err != nil {
