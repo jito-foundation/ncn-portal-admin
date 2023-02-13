@@ -186,7 +186,7 @@ func (bc *PowBlockchain) FindUnspentTransactions(address string) []Transaction {
 				}
 
 				// check every block in a blockchain
-				if out.CanBeUnlockedWith(address) {
+				if out.IsLockedWithKey([]byte(address)) {
 					unspentTXs = append(unspentTXs, *tx)
 				}
 			}
@@ -194,7 +194,7 @@ func (bc *PowBlockchain) FindUnspentTransactions(address string) []Transaction {
 			// gather all inputs that could unlock outputs locked with the provided address
 			if !tx.IsCoinbase() {
 				for _, in := range tx.Vin {
-					if in.CanUnlockOutputWith(address) {
+					if in.UsesKey([]byte(address)) {
 						inTxID := hex.EncodeToString(in.Txid)
 						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
 					}
@@ -216,7 +216,7 @@ func (bc *PowBlockchain) FindUTXO(address string) []TXOutput {
 
 	for _, tx := range unspentTransactions {
 		for _, out := range tx.Vout {
-			if out.CanBeUnlockedWith(address) {
+			if out.IsLockedWithKey([]byte(address)) {
 				UTXOs = append(UTXOs, out)
 			}
 		}
@@ -235,7 +235,7 @@ Work:
 		txID := hex.EncodeToString(tx.ID)
 
 		for outIdx, out := range tx.Vout {
-			if out.CanBeUnlockedWith(address) && accumulated < amount {
+			if out.IsLockedWithKey([]byte(address)) && accumulated < amount {
 				accumulated += out.Value
 				unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
 

@@ -36,45 +36,39 @@ func (tx *Transaction) SetID() {
 	tx.ID = hash[:]
 }
 
-// "coins" are stored
-type TXOutput struct {
-	Value        int
-	ScriptPubKey string
-}
-
 type TXInput struct {
 	Txid      []byte
 	Vout      int
-	ScriptSig string
+	Signature []byte
+	PubKey    []byte
 }
 
-func (in *TXInput) CanUnlockOutputWith(unlockingData string) bool {
-	return in.ScriptSig == unlockingData
+func (in *TXInput) UsesKey(publicKeyHash []byte) bool {
+	lockingHash := HashPubKey(in.PubKey)
+
+	return bytes.Compare(lockingHash, publicKeyHash) == 0
 }
 
-func (out *TXOutput) CanBeUnlockedWith(unlockingData string) bool {
-	return out.ScriptPubKey == unlockingData
-}
-
-// does'nt require previously existing outputs. 
+// does'nt require previously existing outputs.
 func NewCoinbaseTx(to, data string) *Transaction {
 	if data == "" {
 		data = fmt.Sprintf("Reward to '%s'", to)
 	}
 
-	txin := TXInput{[]byte{}, -1, data}
-	txout := TXOutput{subsidy, to}
-	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
+	txin := TXInput{[]byte{}, -1, nil, []byte(data)}
+	txout := NewTXOutput(subsidy, data)
+	tx := Transaction{nil, []TXInput{txin}, []TXOutput{*txout}}
 	tx.SetID()
 
 	return &tx
 }
 
-func NewUTXOTransaction(from, to string, amount int, bc *PowBlockchain) *Transaction {
+func NewUTXOTransaction(wallet *Wallet, to string, amount int, bc *PowBlockchain) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
-	acc, validOutputs := bc.FindSpendableOutputs(from, amount)
+	pubKeyHash := HashPubKey(wallet.PublicKey)
+	acc, validOutputs := bc.FindSpendableOutputs(string(pubKeyHash), amount)
 
 	if acc < amount {
 		log.Panic("ERROR: Not enough funds")
@@ -88,15 +82,16 @@ func NewUTXOTransaction(from, to string, amount int, bc *PowBlockchain) *Transac
 		}
 
 		for _, out := range outs {
-			input := TXInput{txID, out, from}
+			input := TXInput{txID, out, nil, wallet.PublicKey}
 			inputs = append(inputs, input)
 		}
 	}
 
 	// Build a list of outputs
-	outputs = append(outputs, TXOutput{amount, to})
+	from := fmt.Sprintf("%s", wallet.GetAddress())
+	outputs = append(outputs, *NewTXOutput(amount, from))
 	if acc > amount {
-		outputs = append(outputs, TXOutput{acc - amount, from}) // a change
+		outputs = append(outputs, *NewTXOutput(acc-amount, from)) // a change
 	}
 
 	tx := Transaction{nil, inputs, outputs}
