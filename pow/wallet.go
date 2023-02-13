@@ -1,6 +1,7 @@
 package pow
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -27,18 +28,6 @@ func NewWallet() *Wallet {
 	return &wallet
 }
 
-// ECDSA is based on eliptic curves
-func newKeyPair() (ecdsa.PrivateKey, []byte) {
-	curve := elliptic.P256()
-	private, err := ecdsa.GenerateKey(curve, rand.Reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pubKey := append(private.PublicKey.X.Bytes(), private.X.Bytes()...)
-
-	return *private, pubKey
-}
-
 func (w Wallet) GetAddress() []byte {
 	pubKeyHash := HashPubKey(w.PublicKey)
 
@@ -63,6 +52,28 @@ func HashPubKey(pubKey []byte) []byte {
 	publicRIPEMD160 := RIPEMD160Hasher.Sum(nil)
 
 	return publicRIPEMD160
+}
+
+func ValidateAddress(address string) bool {
+	pubKeyHash := Base58Encode([]byte(address))
+	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
+	version := pubKeyHash[0]
+	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
+	targetChecksum := checksum(append([]byte{version}, pubKeyHash...))
+
+	return bytes.Compare(actualChecksum, targetChecksum) == 0
+}
+
+// ECDSA is based on eliptic curves
+func newKeyPair() (ecdsa.PrivateKey, []byte) {
+	curve := elliptic.P256()
+	private, err := ecdsa.GenerateKey(curve, rand.Reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pubKey := append(private.PublicKey.X.Bytes(), private.X.Bytes()...)
+
+	return *private, pubKey
 }
 
 func checksum(payload []byte) []byte {

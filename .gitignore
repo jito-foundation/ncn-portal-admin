@@ -11,3 +11,6 @@ release/
 
 # DB
 blockchain.db
+
+# wallet
+wallet.dat

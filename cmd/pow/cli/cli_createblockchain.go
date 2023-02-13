@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/Aoi1011/tinychain/pow"
 )
 
-func (cli *CLI) createBlockchain(address string) {
+func CreateBlockchain(address string) {
 	bc := pow.CreatePowBlockchain(address)
 	bc.DB.Close()
 	fmt.Println("Done!")
