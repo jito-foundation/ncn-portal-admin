@@ -9,6 +9,7 @@ import (
 	"log"
 )
 
+// amount of reward
 const subsidy = 10
 
 type Transaction struct {
@@ -35,6 +36,7 @@ func (tx *Transaction) SetID() {
 	tx.ID = hash[:]
 }
 
+// "coins" are stored
 type TXOutput struct {
 	Value        int
 	ScriptPubKey string
@@ -54,6 +56,7 @@ func (out *TXOutput) CanBeUnlockedWith(unlockingData string) bool {
 	return out.ScriptPubKey == unlockingData
 }
 
+// does'nt require previously existing outputs. 
 func NewCoinbaseTx(to, data string) *Transaction {
 	if data == "" {
 		data = fmt.Sprintf("Reward to '%s'", to)

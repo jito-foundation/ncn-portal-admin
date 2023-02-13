@@ -47,6 +47,7 @@ func (b *Block) HashTransactions() []byte {
 	for _, tx := range b.Transactions {
 		txHashes = append(txHashes, tx.ID)
 	}
+	// hash of the concatenated combination
 	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
 
 	return txHash[:]

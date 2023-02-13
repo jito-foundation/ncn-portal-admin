@@ -176,6 +176,7 @@ func (bc *PowBlockchain) FindUnspentTransactions(address string) []Transaction {
 		Outputs:
 			for outIdx, out := range tx.Vout {
 				// Was the output spent?
+				// need to check if an output was already referenced in an input
 				if spentTXOs[txID] != nil {
 					for _, spentOut := range spentTXOs[txID] {
 						if spentOut == outIdx {
@@ -184,11 +185,13 @@ func (bc *PowBlockchain) FindUnspentTransactions(address string) []Transaction {
 					}
 				}
 
+				// check every block in a blockchain
 				if out.CanBeUnlockedWith(address) {
 					unspentTXs = append(unspentTXs, *tx)
 				}
 			}
 
+			// gather all inputs that could unlock outputs locked with the provided address
 			if !tx.IsCoinbase() {
 				for _, in := range tx.Vin {
 					if in.CanUnlockOutputWith(address) {
