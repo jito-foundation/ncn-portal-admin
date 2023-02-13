@@ -5,10 +5,6 @@ import (
 )
 
 func main() {
-	bc := pow.NewPowBlockchain()
-
-	defer bc.DB.Close()
-
-	cli := pow.CLI{bc}
+	cli := pow.CLI{}
 	cli.Run()
 }
