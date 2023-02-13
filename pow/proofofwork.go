@@ -54,7 +54,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	// counter
 	nonce := 0
 
-	fmt.Printf("Mining the block containing \"%s\"\n", pow.block.HashTransactions())
+	fmt.Printf("Mining a new block")
 
 	// infinite loop
 	for nonce < maxNonce {
