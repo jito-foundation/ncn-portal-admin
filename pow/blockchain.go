@@ -39,7 +39,6 @@ func CreatePowBlockchain(address string) *PowBlockchain {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		// open a read-write tx
 		b, err := tx.CreateBucket([]byte(blocksBucket))
 		if err != nil {
 			log.Panic(err)

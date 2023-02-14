@@ -16,7 +16,7 @@ func GetBalance(address string) {
 	defer bc.DB.Close()
 
 	balance := 0
-	pubKeyHash := pow.Base58Encode([]byte(address))
+	pubKeyHash := pow.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 	UTXOs := bc.FindUTXO(pubKeyHash)
 
