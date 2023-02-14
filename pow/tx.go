@@ -39,6 +39,7 @@ func (tx Transaction) Serialize() []byte {
 	return encoded.Bytes()
 }
 
+// serializes the transaction and hashes it with the SHA256 algorithm
 func (tx *Transaction) Hash() []byte {
 	var hash [32]byte
 
@@ -144,7 +145,9 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		}
 	}
 
+	// need the same tx copy
 	txCopy := tx.TrimmedCopy()
+	// same curve that is used to generate key pairs
 	curve := elliptic.P256()
 
 	for inID, vin := range tx.Vin {
@@ -154,6 +157,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		txCopy.ID = txCopy.Hash()
 		txCopy.Vin[inID].PubKey = nil
 
+		// signature is a pair of numbers and a public key is a pair of coordinates
 		r := big.Int{}
 		s := big.Int{}
 		sigLen := len(vin.Signature)
@@ -166,7 +170,11 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		x.SetBytes(vin.PubKey[:(keyLen / 2)])
 		y.SetBytes(vin.PubKey[(keyLen / 2):])
 
-		rawPubKey := ecdsa.PublicKey{curve, &x, &y}
+		rawPubKey := ecdsa.PublicKey{
+			Curve: curve,
+			X:     &x,
+			Y:     &y,
+		}
 		if ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) == false {
 			return false
 		}

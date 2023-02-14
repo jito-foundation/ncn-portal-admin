@@ -55,7 +55,7 @@ func HashPubKey(pubKey []byte) []byte {
 }
 
 func ValidateAddress(address string) bool {
-	pubKeyHash := Base58Encode([]byte(address))
+	pubKeyHash := Base58Decode([]byte(address))
 	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
 	version := pubKeyHash[0]
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
