@@ -8,7 +8,7 @@ import (
 )
 
 func PrintChain() {
-	bc := pow.NewPowBlockchain("")
+	bc := pow.NewPowBlockchain()
 	defer bc.DB.Close()
 
 	bci := bc.Iterator()
