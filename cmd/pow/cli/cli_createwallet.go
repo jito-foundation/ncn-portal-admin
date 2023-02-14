@@ -11,5 +11,5 @@ func CreateWallet() {
 	address := wallets.CreateWallet()
 	wallets.SaveToFile()
 
-	fmt.Printf("Your new address: %v\n", &address)
+	fmt.Printf("Your new address: %s\n", address)
 }
