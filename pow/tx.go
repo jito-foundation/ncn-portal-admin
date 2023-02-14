@@ -189,7 +189,7 @@ func NewCoinbaseTx(to, data string) *Transaction {
 	}
 
 	txin := TXInput{[]byte{}, -1, nil, []byte(data)}
-	txout := NewTXOutput(subsidy, data)
+	txout := NewTXOutput(subsidy, to)
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{*txout}}
 	tx.SetID()
 
@@ -226,7 +226,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *PowBlockchain) *Transac
 	}
 
 	// Build a list of outputs
-	outputs = append(outputs, *NewTXOutput(amount, from))
+	outputs = append(outputs, *NewTXOutput(amount, to))
 	if acc > amount {
 		outputs = append(outputs, *NewTXOutput(acc-amount, from)) // a change
 	}
