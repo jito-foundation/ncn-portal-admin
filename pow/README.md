@@ -1,5 +1,10 @@
 # POW chain
 
+1. Basic Prototype
+
+**Block**
+Bitcoin blocks store transactions, its version, current timestamp and the hash of the previous block
+
 ## Libraries
 
 - ~~[ecies](https://ecies.org/go/)~~
