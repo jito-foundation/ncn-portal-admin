@@ -32,6 +32,38 @@ In the original Hashcash implementation, the requirement sounds like "first 20 b
 
 target as the upper boundary of a range: if a number (a hash) is lower than the boundary, it' valid, and vice versa,
 
+## 3. Persistence and CLI
+
+### **Database Structure**
+
+Bitcoin Core uses two "buckets" to store data:
+
+1. `blocks` stores metadata describing all the blocks in a chain
+2. `chainstate` stores the state of a chain, which is all currently unspent tx outputs and some metadata
+
+Also, blocksa are stored as separate files on the disk. This is done for a performance purpose: reading a single block won't require loading all (or some) of them into memory.
+
+### **Serialization**
+
+### **Persistence**
+
+1. Open a DB file
+2. Check if there's a blockchain stored in it.
+3. If there's a blockchain:
+   1. Create a new Blockchain instance
+   2. Set the tip of the Blockchain instance to the last block hash stored in the DB.
+4. If there's no existing blockchain
+   1. Create the genesis block
+   2. Store in the DB
+   3. Save the genesis block's hash as the last block hash.
+   4. Create a new Blockchain instance with its tip pointing at the genesis block.
+
+### **Inspecting Blockchain**
+
+will read them one by one. 
+
+choosing a tip means "voting" for a blockchain
+
 ## Libraries
 
 - ~~[ecies](https://ecies.org/go/)~~
