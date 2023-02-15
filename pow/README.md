@@ -64,6 +64,33 @@ will read them one by one.
 
 choosing a tip means "voting" for a blockchain
 
+## 4. Transaction 1
+
+### **Bitcoin Transaction**
+
+A tx is a combination of inputs and outputs
+Inputs of a new transaction reference outputs of a previous transaction
+Outputs are where coins are actually stored
+
+### **Transaction Outputs**
+
+TXOuput store "coins" (Value field)
+One important thing about outputs is that they are indivisible, which means that you cannot reference a part of its value. 
+When an output is referenced in a new transaction, it's spent as a whole. 
+
+### **Transaction Inputs**
+
+an input references a previous output: 
+`Txid` stores the ID of such transaction
+`Vout` stores an index of an output in the transaction
+`ScriptSig` is a script which provides data to be used in an output's `ScriptPubKey`
+
+### **The egg**
+
+In Bitcoin, outputs come before inputs
+
+When a miner starts mining a block, it adds a coinbase transaction to it. A coinbase transaction is a special type of transactions, which doesn't require previously existing outputs. The egg without a chicken. This is the reward miners get for mining new blocks.
+
 ## Libraries
 
 - ~~[ecies](https://ecies.org/go/)~~
