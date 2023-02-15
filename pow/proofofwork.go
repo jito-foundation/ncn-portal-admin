@@ -21,8 +21,9 @@ type ProofOfWork struct {
 }
 
 func NewProofOfWork(b *Block) *ProofOfWork {
-	// 0x10000000000000000000000000000000000000000000000000000000000
+	// hexadecimal representation: 0x10000000000000000000000000000000000000000000000000000000000
 	target := big.NewInt(1)
+	// 256 is the length of a SHA-256 hash in bits
 	target.Lsh(target, uint(256-targetBits))
 
 	pow := &ProofOfWork{b, target}
