@@ -1,328 +1,327 @@
 package pow
 
 import (
+	"bytes"
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/json"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
-	"strings"
-	"time"
+	"os"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/boltdb/bolt"
 )
 
-type Tinycoin struct {
-	Blocks     []Block
-	Pool       TxPool
-	Wallet     Wallet
-	Difficulty uint
-	StopFlg    bool
+const dbFile = "blockchain.db"
+const blocksBucket = "blocks"
+const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
+
+type PowBlockchain struct {
+	Tip []byte
+	DB  *bolt.DB
 }
 
-func NewTinycoin(wallet Wallet, difficulty uint) *Tinycoin {
-	return &Tinycoin{
-		Blocks:     []Block{*NewBlock()},
-		Pool:       *NewTxPool(),
-		Wallet:     wallet,
-		Difficulty: difficulty,
-		StopFlg:    false,
+func CreatePowBlockchain(address string) *PowBlockchain {
+	if dbExists() {
+		fmt.Println("Blockchain already exists.")
+		os.Exit(1)
 	}
 
-}
+	var tip []byte
 
-func (tc *Tinycoin) LatestBlock() Block {
-	len := len(tc.Blocks)
-	return tc.Blocks[len-1]
-}
+	cbtx := NewCoinbaseTx(address, genesisCoinbaseData)
+	genesis := NewGenesisBlock(cbtx)
 
-func (tc *Tinycoin) AddBlock(newBlock Block) {
-	tc.validBlock(newBlock)
-	tc.Blocks = append(tc.Blocks, newBlock)
-}
-
-func (tc *Tinycoin) validBlock(block Block) {
-	preBlock := tc.LatestBlock()
-	expHash := HashBlock(block.Height, block.PreHash, block.Timestamp, block.Data, block.Nonce)
-
-	if preBlock.Height+1 != block.Height {
-		panic(fmt.Sprintf("Invalid height. expected: %v", preBlock.Height+1))
-	} else if preBlock.Hash != block.PreHash {
-		panic(fmt.Sprintf("Invalid preHash. expected: %v", preBlock.Hash))
-	} else if expHash.String() != block.Hash {
-		panic(fmt.Sprintf("Invalid hash. expected: %v", expHash))
+	// open a BoltDB file
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Panic(err)
 	}
 
-	ok := checkHash(block, tc.Difficulty)
-	if !ok {
-		panic(fmt.Sprintf("Invalid hash. expected to start from: %v", strings.Repeat("0", int(tc.Difficulty))))
+	err = db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucket([]byte(blocksBucket))
+		if err != nil {
+			log.Panic(err)
+		}
+
+		err = b.Put(genesis.Hash, genesis.Serialize())
+		if err != nil {
+			log.Panic(err)
+		}
+
+		err = b.Put([]byte("l"), genesis.Hash)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		tip = genesis.Hash
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
 	}
+
+	bc := PowBlockchain{tip, db}
+
+	return &bc
 }
 
-func (tc *Tinycoin) GenNextBlock() Block {
-	var nonce uint = 0
-	pre := tc.LatestBlock()
-	coinbaseTx := tc.GenCoinbaseTx()
+func NewPowBlockchain() *PowBlockchain {
+	if dbExists() == false {
+		fmt.Println("No existing blockchain found. Create one first")
+		os.Exit(1)
+	}
 
-	ticker := time.NewTicker(1 * time.Second / 32)
-	done := make(chan bool)
+	var tip []byte
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Panic(err)
+	}
 
-	var block = Block{}
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		tip = b.Get([]byte("l"))
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				return
-			case t := <-ticker.C:
-				data := ""
-				block = Block{
-					Height:    pre.Height + 1,
-					PreHash:   pre.Hash,
-					Timestamp: time.Now(),
-					Data:      data,
-					Nonce:     nonce,
-				}
+	bc := PowBlockchain{tip, db}
 
-				ok := checkHash(block, tc.Difficulty)
-				if ok {
-					spentTxs := tc.Pool.txs
-					emptyPool := make([]Transaction, len(tc.Pool.txs))
-					tc.Pool.txs = emptyPool
-					tc.Pool.UpdateUnspentTxs(spentTxs)
-					tc.Pool.unspentTxs = append(tc.Pool.unspentTxs, coinbaseTx)
-					done <- true
-				}
-				nonce += 1
-				fmt.Println("Tick at", t)
+	return &bc
+}
+
+// finds a transaction in the blockchain by its ID
+func (bc *PowBlockchain) FindTransaction(ID []byte) (Transaction, error) {
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			if bytes.Compare(tx.ID, ID) == 0 {
+				return *tx, nil
 			}
 		}
-	}()
 
-	// time.Sleep(1 * time.Second / 32)
-	// ticker.Stop()
-
-	return block
-}
-
-func checkHash(block Block, difficulty uint) bool {
-	for i, val := range block.Hash {
-		if val != rune(0) {
-			return false
-		}
-
-		if uint(i)+1 > difficulty {
+		if len(block.PrevBlockHash) == 0 {
 			break
 		}
 	}
+
+	return Transaction{}, errors.New("Transaction is not found")
+}
+
+// finds unspent outputs for a public key hash, used to get balance
+func (bc *PowBlockchain) FindUTXO() map[string]TXOutputs {
+	UTXO := make(map[string]TXOutputs)
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterator()
+
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.Vout {
+				// Was the output spent?
+				// need to check if an output was already referenced in an input
+				if spentTXOs[txID] != nil {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				outs := UTXO[txID]
+				outs.Outputs = append(outs.Outputs, out)
+				UTXO[txID] = outs
+			}
+
+			// gather all inputs that could unlock outputs locked with the provided address
+			if !tx.IsCoinbase() {
+				for _, in := range tx.Vin {
+					inTxID := hex.EncodeToString(in.Txid)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+				}
+			}
+		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+
+	}
+
+	return UTXO
+}
+
+func (bc *PowBlockchain) Iterator() *BlockchainIterator {
+	bci := &BlockchainIterator{bc.Tip, bc.DB}
+	return bci
+}
+
+func (bc *PowBlockchain) MineBlock(transactions []*Transaction) *Block {
+	var lastHash []byte
+
+	for _, tx := range transactions {
+		if bc.VerifyTransaction(tx) != true {
+			log.Panic("ERROR: Invalid transaction")
+		}
+	}
+
+	err := bc.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		lastHash = b.Get([]byte("l"))
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	newBlock := NewBlock(transactions, lastHash)
+
+	err = bc.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		if err != nil {
+			log.Panic(err)
+		}
+
+		err = b.Put([]byte("l"), newBlock.Hash)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		bc.Tip = newBlock.Hash
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return newBlock
+}
+
+// find transaction it references, and sign it
+func (bc *PowBlockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.FindTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
+	}
+
+	tx.Sign(privKey, prevTXs)
+}
+
+// verify the transaction
+func (bc *PowBlockchain) VerifyTransaction(tx *Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
+	}
+
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.FindTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
+	}
+
+	return tx.Verify(prevTXs)
+}
+
+func dbExists() bool {
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
+		return false
+	}
+
 	return true
 }
 
-func (tc *Tinycoin) StartMining() {
-	for {
-		if tc.StopFlg {
-			break
-		}
-		block := tc.GenNextBlock()
-		tc.AddBlock(block)
-		fmt.Printf("new block mined! block number is %d", block.Height)
-	}
-}
+// // finds the enough number of outputs holding required amount
+// func (bc *PowBlockchain) FindSpendableOutputs(pubKeyHash []byte, amount int) (int, map[string][]int) {
+// 	unspentOutputs := make(map[string][]int)
+// 	unspentTXs := bc.FindUnspentTransactions(pubKeyHash)
+// 	accumulated := 0
 
-func (tc *Tinycoin) GenCoinbaseTx() Transaction {
-	tx := Transaction{}
-	return tc.Wallet.SignTx(tx.NewTransaction("", tc.Wallet.PubKey))
-}
+// Work:
+// 	for _, tx := range unspentTXs {
+// 		txID := hex.EncodeToString(tx.ID)
 
-type Block struct {
-	Height    uint
-	PreHash   string
-	Timestamp time.Time
-	Data      string
-	Nonce     uint
-	Hash      string
-}
+// 		for outIdx, out := range tx.Vout {
+// 			if out.IsLockedWithKey([]byte(pubKeyHash)) && accumulated < amount {
+// 				accumulated += out.Value
+// 				unspentOutputs[txID] = append(unspentOutputs[txID], outIdx)
 
-func NewBlock() *Block {
-	return &Block{
-		Height:    0,
-		PreHash:   "0",
-		Timestamp: time.Now(),
-		Data:      "{}",
-		Nonce:     0,
-		Hash:      HashBlock(0, "0", time.Now(), "{}", 0).String(),
-	}
-}
+// 				if accumulated >= amount {
+// 					break Work
+// 				}
+// 			}
+// 		}
+// 	}
 
-func HashBlock(height uint, preHash string, timestamp time.Time, data string, nonce uint) common.Hash {
-	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v,%v,%v,%v", height, preHash, timestamp, data, nonce)))
-}
+// 	return accumulated, unspentOutputs
+// }
 
-type Transaction struct {
-	InHash  string `json:"InHash"`
-	InSig   string `json:"InSig"`
-	OutAddr string `json:"OutAddr"`
-	Hash    string `json:"Hash"`
-}
+// // finds transactions with unspent outputs
+// func (bc *PowBlockchain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
+// 	var unspentTXs []Transaction
+// 	spentTXOs := make(map[string][]int)
+// 	bci := bc.Iterator()
 
-func (t *Transaction) NewTransaction(inHash string, outAddr string) Transaction {
-	return Transaction{
-		InHash:  inHash,
-		OutAddr: outAddr,
-		InSig:   "",
-		Hash:    HashTransaction(inHash, outAddr).String(),
-	}
-}
+// 	for {
+// 		block := bci.Next()
 
-func (t *Transaction) String() string {
-	txBytes, err := json.Marshal(t)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(txBytes)
-}
+// 		for _, tx := range block.Transactions {
+// 			txID := hex.EncodeToString(tx.ID)
 
-func HashTransaction(inHash string, outAddr string) common.Hash {
-	return crypto.Keccak256Hash([]byte(fmt.Sprintf("%v,%v", inHash, outAddr)))
-}
+// 		Outputs:
+// 			for outIdx, out := range tx.Vout {
+// 				// Was the output spent?
+// 				// need to check if an output was already referenced in an input
+// 				if spentTXOs[txID] != nil {
+// 					for _, spentOut := range spentTXOs[txID] {
+// 						if spentOut == outIdx {
+// 							continue Outputs
+// 						}
+// 					}
+// 				}
 
-type TxPool struct {
-	txs        []Transaction
-	unspentTxs []Transaction
-}
+// 				// check every block in a blockchain
+// 				if out.IsLockedWithKey(pubKeyHash) {
+// 					unspentTXs = append(unspentTXs, *tx)
+// 				}
+// 			}
 
-func NewTxPool() *TxPool {
-	return &TxPool{
-		txs:        []Transaction{},
-		unspentTxs: []Transaction{},
-	}
-}
+// 			// gather all inputs that could unlock outputs locked with the provided address
+// 			if !tx.IsCoinbase() {
+// 				for _, in := range tx.Vin {
+// 					if in.UsesKey(pubKeyHash) {
+// 						inTxID := hex.EncodeToString(in.Txid)
+// 						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+// 					}
+// 				}
+// 			}
+// 		}
 
-func (tp *TxPool) AddTx(newTx Transaction) {
-	tp.ValidateTx(tp.unspentTxs, newTx)
-	tp.txs = append(tp.txs, newTx)
-}
+// 		if len(block.PrevBlockHash) == 0 {
+// 			break
+// 		}
+// 	}
 
-func (tp *TxPool) BalanceOf(address string) int {
-	var tempTxs []Transaction
-
-	for _, unspentTx := range tp.unspentTxs {
-		if unspentTx.OutAddr == address {
-			tempTxs = append(tempTxs, unspentTx)
-		}
-	}
-
-	return len(tempTxs)
-}
-
-func (tp *TxPool) UpdateUnspentTxs(spentTxs []Transaction) {
-	for _, spentTx := range spentTxs {
-		// check tx was spent
-		var index = -1
-		for i, unspentTx := range tp.unspentTxs {
-			if unspentTx.Hash == spentTx.InHash {
-				index = i
-			}
-		}
-
-		if index == -1 {
-			return
-		}
-
-		// remove from unspent txs
-		tp.unspentTxs = append(tp.unspentTxs[:index], tp.unspentTxs[index+1:]...)
-	}
-
-	tp.unspentTxs = append(tp.unspentTxs, spentTxs...)
-}
-
-func (tp *TxPool) ValidateTx(unspentTxs []Transaction, tx Transaction) {
-	// check hash value
-	if tx.Hash != HashTransaction(tx.InHash, tx.OutAddr).String() {
-		panic(fmt.Sprintf("Invalid hash. expected: %v", HashTransaction(tx.InHash, tx.OutAddr)))
-	}
-
-	// check tx whether already spent
-	var found = false
-	var exTx Transaction
-	for _, unspentTx := range unspentTxs {
-		if unspentTx.Hash == tx.InHash {
-			exTx = unspentTx
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		panic(fmt.Sprintf("Tx is not found"))
-	}
-
-	// check signature is valid
-	tp.ValidateSig(tx, exTx.OutAddr)
-}
-
-func (tp *TxPool) ValidateSig(tx Transaction, address string) bool {
-	publicKeyBytes, err := hexutil.Decode(address)
-	if err != nil {
-		fmt.Printf("Fail to decode address")
-		return false
-	}
-
-	pubKey, err := crypto.ToECDSA(publicKeyBytes)
-	if err != nil {
-		fmt.Printf("Fail to ECDSA")
-		return false
-	}
-	return ecdsa.VerifyASN1(&pubKey.PublicKey, []byte(tx.Hash), []byte(tx.InSig))
-}
-
-type Wallet struct {
-	PriKey ecdsa.PrivateKey `json:"PriKey"`
-	PubKey string           `json:"PubKey"`
-}
-
-func (w *Wallet) New() {
-	privateKey, err := crypto.GenerateKey()
-	if err != nil {
-		fmt.Printf("%v", err)
-	}
-
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		log.Fatal("cannot assert type: publicKey is not of type *esdsa.PublicKey")
-	}
-
-	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-
-	w.PriKey = *privateKey
-	w.PubKey = hexutil.Encode(publicKeyBytes)
-}
-
-func (w *Wallet) SignTx(tx Transaction) Transaction {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-
-	msg := "hello, world"
-	hash := sha256.Sum256([]byte(msg))
-
-	sig, err := ecdsa.SignASN1(rand.Reader, privateKey, hash[:])
-	if err != nil {
-		panic(err)
-	}
-	tx.InSig = string(sig)
-
-	return tx
-	// fmt.Printf("signature: %x\n", sig)
-
-}
-
-// func toHexString(bytes []byte) string {
-
+// 	return unspentTXs
 // }

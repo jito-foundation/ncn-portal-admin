@@ -16,6 +16,39 @@
 
 7. Validate Hash
 
+![overview blockchain](./assets/img/Screenshot%20from%202023-02-10%2013-59-14.png)
+
+## Transaction
+In Bitcoin, payments are realized in completely different way. There are:
+1. No accounts.
+2. No balances.
+3. No addresses.
+4. No coins.
+5. No senders and receivers
+
+**Transaction Outputs**
+```golang
+type TXOutput struct {
+	Value 		int
+	ScriptPubKey 	string
+}
+```
+value - outputs that store "coins"
+ScriptPubKey - will store an arbitrary string (user defined wallet address)
+
+**Transaction Inputs**
+```golang
+type TXInput struct {
+	Txid 		[]byte
+	Vout 		int
+	ScriptSig 	string
+}
+```
+an input references a previous output: 
+Txid - stores the ID of such transaction
+Vout - stores an index of an output in the transaction
+ScriptSig - a script which provides data to be used in an output's ScriptPubKey
+
 ## References
 
 - [Build Blockchain from scratch](https://www.youtube.com/watch?v=19zTYCAQRZg)
