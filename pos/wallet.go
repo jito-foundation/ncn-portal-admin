@@ -16,24 +16,25 @@ type Wallet struct {
 	PublicKey  []byte
 }
 
-func NewWallet() *Wallet {
-	private, public := newKeyPair()
-	wallet := Wallet{private, public}
-
-	return &wallet
-}
+// func NewWallet() *Wallet {
+// 	private, public := newKeyPair()
+// 	wallet := Wallet{private, public}
+//
+// 	return &wallet
+// }
 
 func (w Wallet) GetAddress() []byte {
-	pubKeyHash := HashPubKey(w.PublicKey)
-
-	// prepend the version of the address generation algorithm to the hash
-	versionedPayload := append([]byte{version}, pubKeyHash...)
-	checksum := checksum(versionedPayload)
-
-	fullPayload := append(versionedPayload, checksum...)
-	address := Base58Encode(fullPayload)
-
-	return address
+	//	pubKeyHash := HashPubKey(w.PublicKey)
+	//
+	//	// prepend the version of the address generation algorithm to the hash
+	//	versionedPayload := append([]byte{version}, pubKeyHash...)
+	//	checksum := checksum(versionedPayload)
+	//
+	//	fullPayload := append(versionedPayload, checksum...)
+	//	address := Base58Encode(fullPayload)
+	//
+	//	return address
+	return []byte{}
 }
 
 func HashPubKey(pubKey []byte) []byte {
@@ -50,31 +51,32 @@ func HashPubKey(pubKey []byte) []byte {
 }
 
 func ValidateAddress(address string) bool {
-	pubKeyHash := Base58Decode([]byte(address))
-	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
-	version := pubKeyHash[0]
-	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
-	targetChecksum := checksum(append([]byte{version}, pubKeyHash...))
+	//pubKeyHash := Base58Decode([]byte(address))
+	//actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
+	//version := pubKeyHash[0]
+	//pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
+	//targetChecksum := checksum(append([]byte{version}, pubKeyHash...))
 
-	return bytes.Compare(actualChecksum, targetChecksum) == 0
+	//return bytes.Compare(actualChecksum, targetChecksum) == 0
+	return true
 }
 
 // ECDSA is based on eliptic curves
-func newKeyPair() (ecdsa.PrivateKey, []byte) {
-	elliptic.Marshal(S256)
-	curve := elliptic.P256()
-	private, err := ecdsa.GenerateKey(curve, rand.Reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pubKey := append(private.PublicKey.X.Bytes(), private.PublicKey.Y.Bytes()...)
+// func newKeyPair() (ecdsa.PrivateKey, []byte) {
+// elliptic.Marshal(S256)
+// curve := elliptic.P256()
+// private, err := ecdsa.GenerateKey(curve, rand.Reader)
+// if err != nil {
+// 	log.Fatal(err)
+// }
+// pubKey := append(private.PublicKey.X.Bytes(), private.PublicKey.Y.Bytes()...)
 
-	return *private, pubKey
-}
+// return *private, pubKey
+// }
 
-func checksum(payload []byte) []byte {
-	firstSHA := sha256.Sum256(payload)
-	secondSHA := sha256.Sum256(firstSHA[:])
-
-	return secondSHA[:addressChecksumLen]
-}
+// func checksum(payload []byte) []byte {
+// 	firstSHA := sha256.Sum256(payload)
+// 	secondSHA := sha256.Sum256(firstSHA[:])
+//
+// 	return secondSHA[:addressChecksumLen]
+// }
