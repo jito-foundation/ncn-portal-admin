@@ -6,9 +6,10 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"log"
 
-	"golang.org/x/crypto/ripemd160"
+	"golang.org/x/crypto/sha3"
 )
 
 type Wallet struct {
@@ -16,38 +17,41 @@ type Wallet struct {
 	PublicKey  []byte
 }
 
-// func NewWallet() *Wallet {
-// 	private, public := newKeyPair()
-// 	wallet := Wallet{private, public}
-//
-// 	return &wallet
-// }
+func NewWallet() *Wallet {
+	private, public := newKeyPair()
+	wallet := Wallet{private, public}
+
+	return &wallet
+}
 
 func (w Wallet) GetAddress() []byte {
-	//	pubKeyHash := HashPubKey(w.PublicKey)
-	//
-	//	// prepend the version of the address generation algorithm to the hash
-	//	versionedPayload := append([]byte{version}, pubKeyHash...)
-	//	checksum := checksum(versionedPayload)
-	//
-	//	fullPayload := append(versionedPayload, checksum...)
-	//	address := Base58Encode(fullPayload)
-	//
-	//	return address
+	pubKeyHash := HashPubKey(w.PublicKey)
+
+	fmt.Printf("Pubkeyhash: %v", pubKeyHash)
+	// prepend the version of the address generation algorithm to the hash
+//	versionedPayload := append([]byte{version}, pubKeyHash...)
+//	checksum := checksum(versionedPayload)
+//
+//	fullPayload := append(versionedPayload, checksum...)
+//	address := Base58Encode(fullPayload)
+//
+//	return address
 	return []byte{}
 }
 
 func HashPubKey(pubKey []byte) []byte {
-	publicSHA256 := sha256.Sum256(pubKey)
-
-	RIPEMD160Hasher := ripemd160.New()
-	_, err := RIPEMD160Hasher.Write(publicSHA256[:])
-	if err != nil {
-		log.Panic(err)
-	}
-	publicRIPEMD160 := RIPEMD160Hasher.Sum(nil)
-
-	return publicRIPEMD160
+	hash := sha3.NewLegacyKeccak256()
+	return hash.Sum(pubKey)
+// 	publicSHA256 := sha256.Sum256(pubKey)
+// 
+// 	RIPEMD160Hasher := ripemd160.New()
+// 	_, err := RIPEMD160Hasher.Write(publicSHA256[:])
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+// 	publicRIPEMD160 := RIPEMD160Hasher.Sum(nil)
+// 
+// 	return publicRIPEMD160
 }
 
 func ValidateAddress(address string) bool {
@@ -62,21 +66,20 @@ func ValidateAddress(address string) bool {
 }
 
 // ECDSA is based on eliptic curves
-// func newKeyPair() (ecdsa.PrivateKey, []byte) {
-// elliptic.Marshal(S256)
-// curve := elliptic.P256()
-// private, err := ecdsa.GenerateKey(curve, rand.Reader)
-// if err != nil {
-// 	log.Fatal(err)
-// }
-// pubKey := append(private.PublicKey.X.Bytes(), private.PublicKey.Y.Bytes()...)
+func newKeyPair() (ecdsa.PrivateKey, []byte) {
+	curve := Secp256k1()
+	private, err := ecdsa.GenerateKey(curve, rand.Reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pubKey := append(private.PublicKey.X.Bytes(), private.PublicKey.Y.Bytes()...)
 
-// return *private, pubKey
-// }
+	return *private, pubKey
+}
 
 // func checksum(payload []byte) []byte {
 // 	firstSHA := sha256.Sum256(payload)
 // 	secondSHA := sha256.Sum256(firstSHA[:])
-//
+// 
 // 	return secondSHA[:addressChecksumLen]
 // }
