@@ -5,6 +5,8 @@ import (
 	"os"
 	"flag"
 	"log"
+
+	cmd "github.com/Aoi1011/tinychain/cmd/pos/cli"
 )
 
 

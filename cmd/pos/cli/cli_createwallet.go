@@ -7,9 +7,9 @@ import (
 )
 
 func CreateWallet() {
-	wallets, _ := pos.NewWallets()
+	wallets := pos.NewWallet()
 	address := wallets.CreateWallet()
-	wallets.SaveToFile()
+	// wallets.SaveToFile()
 
 	fmt.Printf("Your new address: %s\n", address)
 }
