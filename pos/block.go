@@ -8,20 +8,20 @@ type Block struct {
 	Timestamp    int64
 	Transactions []*Transaction
 	Proposer     Address
-	StateRoot    []*State
+	StateRoot    string
 	Votes        []*Vote
 	Signature    []byte
 	Hash         []byte
 }
 
-func NewBlock(height uint, transactioins []*Transaction, prevBlockHash []byte, stateRoot []*State) *Block {
+func NewBlock(height uint, transactioins []*Transaction, prevBlockHash []byte) *Block {
 	block := Block {
 		Height: height,
 		PrevBlockHash: prevBlockHash,
 		Timestamp: time.Now().Unix(),
 		Transactions: transactioins,
 		Proposer: Address{},
-		StateRoot: stateRoot,
+		StateRoot: "",
 		Signature: []byte{},
 		Hash: []byte{},
 	}
