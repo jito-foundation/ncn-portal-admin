@@ -13,9 +13,9 @@ const (
 type Address [AddressLength]byte
 
 func BytesToAddress(b []byte) {
-var a Address
-a.SetBytes(b)
-return a
+	var a Address
+	a.SetBytes(b)
+	return a
 }
 
 func (a Address) Hex() string {
@@ -52,4 +52,11 @@ func (a *Address) hex() []byte {
 	copy(buf[:2], "0x")
 	hex.Encode(buf[2:], a[:])
 	return buf[:]
+}
+
+func (a *Address) SetBytes(b []byte) {
+	if len(b) > len(a) {
+		b = b[len(b)-AddressLength:]
+	}
+	copy(a[AddressLength-len(b):], b)
 }
