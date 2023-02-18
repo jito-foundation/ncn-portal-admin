@@ -26,7 +26,7 @@ func NewWallet() *Wallet {
 
 func (w *Wallet) CreateWallet() string {
 	// wallet := NewWallet()
-	address := fmt.Sprintf("%s", w.GetAddress())
+	address := fmt.Sprintf("%s\n", w.GetAddress())
 
 	// ws.Wallets[address] = wallet
 
@@ -37,7 +37,7 @@ func (w Wallet) GetAddress() []byte {
 	// pubKeyHash := HashPubKey(w.PublicKey)
 	address := PubkeyToAddress(w.PrivateKey.PublicKey)
 
-	fmt.Printf("Pubkeyhash: %s", string(address))
+	fmt.Printf("Pubkeyhash: %s\n", address.String())
 	// prepend the version of the address generation algorithm to the hash
 	//	versionedPayload := append([]byte{version}, pubKeyHash...)
 	//	checksum := checksum(versionedPayload)
@@ -88,7 +88,7 @@ func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 
 func PubkeyToAddress(p ecdsa.PublicKey) Address {
 	pubBytes := FromECDSAPub(&p)
-	return Keccak256(pubBytes[1:])[12:]
+	return BytesToAddress(Keccak256(pubBytes[1:])[12:])
 }
 
 func Keccak256(data ...[]byte) []byte {

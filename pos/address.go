@@ -12,7 +12,7 @@ const (
 
 type Address [AddressLength]byte
 
-func BytesToAddress(b []byte) {
+func BytesToAddress(b []byte) Address {
 	var a Address
 	a.SetBytes(b)
 	return a
