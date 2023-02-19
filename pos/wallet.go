@@ -34,7 +34,6 @@ func (w *Wallet) CreateWallet() string {
 }
 
 func (w Wallet) GetAddress() []byte {
-	// pubKeyHash := HashPubKey(w.PublicKey)
 	address := PubkeyToAddress(w.PrivateKey.PublicKey)
 
 	fmt.Printf("Pubkeyhash: %s\n", address.String())
@@ -58,26 +57,6 @@ type KeccakState interface {
 func NewKeccakState() KeccakState {
 	return sha3.NewLegacyKeccak256().(KeccakState)
 }
-
-// func HashPubKey(pubKey []byte) []byte {
-// 	b := make([]byte, 32)
-// 	d := sha3.NewLegacyKeccak256().(KeccakState)
-// 	for _, b := range pubKey {
-// 		d.Write(b)
-// 	}
-// 	hash := sha3.NewLegacyKeccak256()
-// 	return hash.Sum(pubKey)
-// 	publicSHA256 := sha256.Sum256(pubKey)
-//
-// 	RIPEMD160Hasher := ripemd160.New()
-// 	_, err := RIPEMD160Hasher.Write(publicSHA256[:])
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-// 	publicRIPEMD160 := RIPEMD160Hasher.Sum(nil)
-//
-// 	return publicRIPEMD160
-// }
 
 func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	if pub == nil || pub.X == nil || pub.Y == nil {
@@ -124,9 +103,3 @@ func newKeyPair() (ecdsa.PrivateKey, []byte) {
 	return *private, pubKey
 }
 
-// func checksum(payload []byte) []byte {
-// 	firstSHA := sha256.Sum256(payload)
-// 	secondSHA := sha256.Sum256(firstSHA[:])
-//
-// 	return secondSHA[:addressChecksumLen]
-// }
