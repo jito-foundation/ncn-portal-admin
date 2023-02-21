@@ -1,6 +1,11 @@
 package pos
 
-import "fmt"
+import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
+	"log"
+)
 
 	const subsidy = 10
 
@@ -10,6 +15,22 @@ type Transaction struct {
 	Amount    uint
 	Signature []byte
 	hash      []byte
+}
+
+func (tx Transaction) IsCoinbase() bool {
+	return true
+}
+
+func (tx Transaction) Serialize() []byte {
+	var encoded bytes.Buffer
+
+	enc := gob.NewEncoder(&encoded)
+	err := enc.Encode(tx)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return encoded.Bytes()
 }
 
 func NewCoinbaseTx(data string, to Address) *Transaction {
