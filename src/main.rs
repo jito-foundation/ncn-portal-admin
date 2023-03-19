@@ -61,7 +61,7 @@ impl Blockchain {
 
     pub fn is_chain_valid(&self) -> bool {
         let len = self.chain.len();
-        for index in 1..=len {
+        for index in 1..len {
             let current_block = &self.chain[index];
             let prev_block = &self.chain[index - 1];
 
@@ -87,5 +87,13 @@ fn main() {
         "".to_string(),
     ));
 
+    blockchain.add_block(Block::new(
+        2,
+        1577804402,
+        "Hello, world".to_string(),
+        "".to_string(),
+    ));
+
     println!("{:?}", blockchain);
+    println!("Blockchain is valid?: {}", blockchain.is_chain_valid());
 }
