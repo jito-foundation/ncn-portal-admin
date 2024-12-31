@@ -9,8 +9,7 @@ import WhitelistTable from "@/components/Tables/WhitelistTable";
 
 export const metadata: Metadata = {
   title: "Whitelist",
-  description:
-    "This is Whitelist Tables page",
+  description: "This is Whitelist Tables page",
 };
 
 const WhitelistPage = () => {
