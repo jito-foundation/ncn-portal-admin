@@ -28,9 +28,7 @@ export default async function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning={true}>
         <SessionProvider session={session}>
-          <div className="dark:bg-boxdark-2 dark:text-bodydark">
-            {children}
-          </div>
+          <div className="dark:bg-boxdark-2 dark:text-bodydark">{children}</div>
         </SessionProvider>
       </body>
     </html>
