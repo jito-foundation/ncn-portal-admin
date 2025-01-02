@@ -17,8 +17,6 @@ const SignIn: React.FC = () => {
     const callbackUrl = searchParams.get("callbackUrl") || "/";
 
     try {
-      console.log("username: ", username);
-      console.log("password: ", password);
       const response = await signIn("credentials", {
         redirect: false,
         username,

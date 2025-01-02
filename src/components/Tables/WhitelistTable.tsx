@@ -27,7 +27,6 @@ const WhitelistTable = () => {
       }
 
       const json = await response.json();
-      console.log(json);
       setWhitelists(json.data);
     } catch (error) {
       console.error("Error fetching whitelist: ", error);
