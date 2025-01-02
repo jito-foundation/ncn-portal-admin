@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Metadata } from "next";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -10,33 +8,34 @@ const SignIn: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [id, setId] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    const callbackUrl = searchParams.get('callbackUrl') || '/'
+    const callbackUrl = searchParams.get("callbackUrl") || "/";
 
     try {
-      const response = await signIn('credentials', {
+      console.log("username: ", username);
+      console.log("password: ", password);
+      const response = await signIn("credentials", {
         redirect: false,
-        id,
+        username,
         password,
         callbackUrl,
-      })
+      });
       if (response?.error) {
-        console.log(response.error)
+        console.log(response.error);
       } else {
-        router.push(callbackUrl)
+        router.push(callbackUrl);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
 
   return (
-    <DefaultLayout>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap items-center">
           <div className="hidden w-full xl:block xl:w-1/2">
@@ -168,21 +167,22 @@ const SignIn: React.FC = () => {
 
           <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              {/* <span className="mb-1.5 block font-medium">Start for free</span> */}
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Sign In to NCN Portal Admin
               </h2>
-
               <form onSubmit={onSubmit}>
                 <div className="mb-4">
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  <label htmlFor="username" className="mb-2.5 block font-medium text-black dark:text-white">
                     Username
                   </label>
                   <div className="relative">
                     <input
+                      id="username"
                       type="text"
                       placeholder="Enter your username"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
                     />
 
                     <span className="absolute right-4 top-4">
@@ -206,14 +206,17 @@ const SignIn: React.FC = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  <label htmlFor="password" className="mb-2.5 block font-medium text-black dark:text-white">
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="password"
                       type="password"
                       placeholder=""
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
                     />
 
                     <span className="absolute right-4 top-4">
@@ -252,7 +255,6 @@ const SignIn: React.FC = () => {
           </div>
         </div>
       </div>
-    </DefaultLayout>
   );
 };
 

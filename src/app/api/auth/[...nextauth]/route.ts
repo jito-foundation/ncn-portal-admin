@@ -4,19 +4,19 @@ import CredentialsProvider from "next-auth/providers/credentials";
 const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "NCN Portal Admin",
       credentials: {
-        id: {
-          label: "Id",
+        username: {
           type: "text",
         },
-        password: { label: "Password", type: "password" },
+        password: { type: "password" },
       },
       async authorize(credentials) {
+        console.log("Hi, username: ", credentials?.username);
+        console.log("Hi, password: ", credentials?.password);
         // credentials に入力が渡ってくる
         // id, password はここでベタ打ちして検証している
         const matched =
-          credentials?.id === "id" && credentials?.password === "password";
+          credentials?.username === "admin" && credentials?.password === "password";
         if (matched) {
           // 今回は null を返さなければなんでもよいので適当
           return {
@@ -29,10 +29,10 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/auth/signin"
-  }
+    signIn: "/auth/signin",
+  },
 };
 
-export const handler = NextAuth(authOptions);
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
