@@ -9,7 +9,7 @@ const DropdownUser = () => {
 
   const handleSignOut = async () => {
     await signOut();
-  }
+  };
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
