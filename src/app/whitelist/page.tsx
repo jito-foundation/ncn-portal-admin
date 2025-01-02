@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import WhitelistTable from "@/components/Tables/WhitelistTable";
-import { getSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
