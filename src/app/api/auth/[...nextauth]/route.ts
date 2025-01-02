@@ -17,7 +17,7 @@ const authOptions: NextAuthOptions = {
 
           const data = {
             username: credentials?.username,
-            password: credentials?.password
+            password: credentials?.password,
           };
           const url = `${apiUrl}/rest/login?username=${data.username}&password=${data.password}`;
           const res = await fetch(url, {
