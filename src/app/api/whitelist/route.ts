@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getApiConfig } from "../apiConfig";
+import { getServerSession } from "next-auth";
 
 export async function GET(_req: Request) {
   try {
@@ -19,10 +20,14 @@ export async function GET(_req: Request) {
 }
 
 const getWhitelists = async (apiUrl: string) => {
+  const session = await getServerSession();
+  const token = session?.user?.name;
+
   const url = `${apiUrl}/rest/whitelist/get/all`;
   const res = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     method: "GET",
   });
