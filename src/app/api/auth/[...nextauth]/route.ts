@@ -37,23 +37,7 @@ const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           const { apiUrl } = getApiConfig();
-          //   const res = await signin(apiUrl);
-          //   return {
-          //     token: res.data,
-          //   }
 
-          // credentials に入力が渡ってくる
-          // id, password はここでベタ打ちして検証している
-          // const matched =
-          //   credentials?.username === "admin" && credentials?.password === "password";
-          // if (matched) {
-          //   // 今回は null を返さなければなんでもよいので適当
-          //   return {
-          //     id: "29472084752894723890248902",
-          //   };
-          // } else {
-          //   return null;
-          // }
           const data = {
             username: credentials?.username,
             password: credentials?.password
