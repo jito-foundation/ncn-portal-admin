@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     if (!pubkey) {
       return NextResponse.json(
         { error: "Public Key are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     if (!token) {
       return NextResponse.json(
         { error: "Unauthorized. Please sign in first." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     console.error("Error creating user:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -105,7 +105,7 @@ export async function DELETE(req: Request) {
     if (!pubkey) {
       return NextResponse.json(
         { error: "Pubkey is required for deletion" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -115,7 +115,7 @@ export async function DELETE(req: Request) {
     if (!token) {
       return NextResponse.json(
         { error: "Unauthorized. Please sign in first." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -141,7 +141,7 @@ export async function DELETE(req: Request) {
     console.error("Error deleting whitelist entry:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
