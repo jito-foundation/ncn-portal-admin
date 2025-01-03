@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+
 import { getApiConfig } from "../../apiConfig";
 
 const authOptions: NextAuthOptions = {
@@ -30,7 +31,6 @@ const authOptions: NextAuthOptions = {
           if (res.status !== 200) {
             const statusText = res.statusText;
             const responseBody = await res.text();
-            console.error(`NCN Portal response error: ${responseBody}`);
             throw new Error(
               `NCN Portal has encountered an error with a status code of ${res.status} ${statusText}: ${responseBody}`,
             );
