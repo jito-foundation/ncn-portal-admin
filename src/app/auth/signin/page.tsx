@@ -10,6 +10,7 @@ const SignIn: React.FC = () => {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -24,12 +25,13 @@ const SignIn: React.FC = () => {
         callbackUrl,
       });
       if (response?.error) {
-        console.log(response.error);
+        setErrorMessage("Sign-in failed. Please check your credentials.");
       } else {
+        setErrorMessage(null);
         router.push(callbackUrl);
       }
     } catch (err) {
-      console.log(err);
+      setErrorMessage("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -169,6 +171,11 @@ const SignIn: React.FC = () => {
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Sign In to NCN Portal Admin
               </h2>
+              {errorMessage && (
+                <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-800 dark:text-red-300">
+                  {errorMessage}
+                </div>
+              )}
               <form onSubmit={onSubmit}>
                 <div className="mb-4">
                   <label
