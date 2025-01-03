@@ -1,14 +1,16 @@
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import ClickOutside from "@/components/ClickOutside";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const DropdownUser = () => {
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
+    router.push("/auth/signin");
   };
 
   return (
