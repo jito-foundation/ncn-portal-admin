@@ -49,6 +49,10 @@ const WhitelistTable = () => {
         <div className="flex h-20 items-center justify-center">
           <p className="text-gray-500 dark:text-gray-300">Loading...</p>
         </div>
+      ) : whitelists.length === 0 ? (
+        <div className="flex h-20 items-center justify-center">
+          <p className="text-gray-500 dark:text-gray-300">No data available</p>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto divide-y divide-gray-300 dark:divide-gray-700">
