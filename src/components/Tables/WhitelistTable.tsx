@@ -35,6 +35,28 @@ const WhitelistTable = () => {
     }
   };
 
+  const deleteWhitelist = async (pubkey: string) => {
+    try {
+      const url = `/api/whitelist?pubkey=${pubkey}`;
+
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete whitelist entry");
+      }
+
+      // Update the UI after successful deletion
+      setWhitelists((prev) => prev.filter((item) => item.pubkey !== pubkey));
+    } catch (error) {
+      console.error("Error deleting whitelist entry: ", error);
+    }
+  };
+
   useEffect(() => {
     getWhitelists();
   }, []);
@@ -64,6 +86,9 @@ const WhitelistTable = () => {
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                   Public Key
                 </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -81,6 +106,14 @@ const WhitelistTable = () => {
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     {item.pubkey}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    <button
+                      className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                      onClick={() => deleteWhitelist(item.pubkey)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
