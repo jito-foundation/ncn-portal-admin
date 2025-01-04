@@ -20,7 +20,7 @@ const AddWhitelistUserPage = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/whitelist", {
+      const response = await fetch("/api/whitelist?action=addUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

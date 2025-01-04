@@ -45,49 +45,22 @@ const getWhitelists = async (apiUrl: string) => {
   return json;
 };
 
-// POST method - Add a new user to the whitelist
+// POST method
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { pubkey } = body;
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action");
 
-    // Validate the input
-    if (!pubkey) {
-      return NextResponse.json(
-        { error: "Public Key are required." },
-        { status: 400 },
-      );
+    switch (action) {
+      case "addUser":
+        return addUser(req);
+
+      case "updateMerkleRoot":
+        return updateMerkleRoot(req);
+
+      default:
+        break;
     }
-
-    const session = await getServerSession();
-    const token = session?.user?.name;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized. Please sign in first." },
-        { status: 401 },
-      );
-    }
-
-    const { apiUrl } = getApiConfig();
-    const url = `${apiUrl}/rest/whitelist/add?wallet_pubkey=${pubkey}`;
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const responseBody = await res.text();
-      console.error(`Failed to create whitelist user: ${responseBody}`);
-      throw new Error(`Error: ${responseBody}`);
-    }
-
-    const data = await res.json();
-    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     console.error("Error creating user:", error);
     return NextResponse.json(
@@ -95,6 +68,83 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+}
+
+// Add a new user to the whitelist
+async function addUser(req: Request) {
+  const body = await req.json();
+  const { pubkey } = body;
+
+  // Validate the input
+  if (!pubkey) {
+    return NextResponse.json(
+      { error: "Public Key are required." },
+      { status: 400 },
+    );
+  }
+
+  const session = await getServerSession();
+  const token = session?.user?.name;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: "Unauthorized. Please sign in first." },
+      { status: 401 },
+    );
+  }
+
+  const { apiUrl } = getApiConfig();
+  const url = `${apiUrl}/rest/whitelist/add?wallet_pubkey=${pubkey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const responseBody = await res.text();
+    console.error(`Failed to create whitelist user: ${responseBody}`);
+    throw new Error(`Error: ${responseBody}`);
+  }
+
+  const data = await res.json();
+  return NextResponse.json({ success: true, data }, { status: 201 });
+}
+
+// Update Merkle Root
+async function updateMerkleRoot(req: Request) {
+  const session = await getServerSession();
+  const token = session?.user?.name;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: "Unauthorized. Please sign in first." },
+      { status: 401 },
+    );
+  }
+
+  const { apiUrl } = getApiConfig();
+  const url = `${apiUrl}/rest/merkle_tree/update`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const responseBody = await res.text();
+    console.error(`Failed to update merkle root: ${responseBody}`);
+    throw new Error(`Error: ${responseBody}`);
+  }
+
+  const data = await res.json();
+  return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
 export async function DELETE(req: Request) {
