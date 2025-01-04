@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     switch (action) {
       case "addUser":
         return addUser(req);
-    
+
       case "updateMerkleRoot":
         return updateMerkleRoot(req);
 
