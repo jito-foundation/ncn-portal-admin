@@ -5,7 +5,7 @@ interface Props {
   onError: (errorMessage: string) => void;
 }
 
-const UploadMerkleRootButton = ({onSuccess, onError}: Props) => {
+const UploadMerkleRootButton = ({ onSuccess, onError }: Props) => {
   const handleUploadMerkleRoot = async () => {
     try {
       const response = await fetch("/api/whitelist?action=updateMerkleRoot", {
