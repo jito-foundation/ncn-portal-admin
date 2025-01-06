@@ -1,13 +1,19 @@
 "use client";
 
+// import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface Whitelist {
   id: string;
   pubkey: string;
+  maxTokens: string;
+  outputTokens: string;
+  upperTokensLimit: string;
 }
 
 const WhitelistTable = () => {
+  const router = useRouter();
   const [whitelists, setWhitelists] = useState<Whitelist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -33,6 +39,17 @@ const WhitelistTable = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const navigateToUpdatePage = (item: Whitelist) => {
+    const params = new URLSearchParams({
+      id: item.id,
+      pubkey: item.pubkey,
+      maxTokens: item.maxTokens,
+      outputTokens: item.outputTokens,
+      upperTokensLimit: item.upperTokensLimit,
+    });
+    router.push(`/whitelist/update?${params.toString()}`);
   };
 
   const deleteWhitelist = async (pubkey: string) => {
@@ -87,6 +104,15 @@ const WhitelistTable = () => {
                   Public Key
                 </th>
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Max Tokens
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Output Tokens
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Upper Tokens Limit
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                   Actions
                 </th>
               </tr>
@@ -108,6 +134,21 @@ const WhitelistTable = () => {
                     {item.pubkey}
                   </td>
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    {item.maxTokens}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    {item.outputTokens}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    {item.upperTokensLimit}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    <button
+                      className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                      onClick={() => navigateToUpdatePage(item)}
+                    >
+                      Update
+                    </button>
                     <button
                       className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
                       onClick={() => deleteWhitelist(item.pubkey)}
