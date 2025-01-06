@@ -1,6 +1,11 @@
 "use client";
 
-const UploadMerkleRootButton = () => {
+interface Props {
+  onSuccess: () => void;
+  onError: (errorMessage: string) => void;
+}
+
+const UploadMerkleRootButton = ({ onSuccess, onError }: Props) => {
   const handleUploadMerkleRoot = async () => {
     try {
       const response = await fetch("/api/whitelist?action=updateMerkleRoot", {
@@ -15,9 +20,9 @@ const UploadMerkleRootButton = () => {
         throw new Error(errorData.error || "Failed to upload merkle root");
       }
 
-      console.log("Merkle root uploaded successfully");
+      onSuccess(); // Call the success callback
     } catch (error: any) {
-      console.error(error);
+      onError(error.message); // Call the error callback
     }
   };
 

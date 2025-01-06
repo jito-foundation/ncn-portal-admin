@@ -55,6 +55,9 @@ export async function POST(req: Request) {
       case "addUser":
         return addUser(req);
 
+      case "updateUser":
+        return updateUser(req);
+
       case "updateMerkleRoot":
         return updateMerkleRoot(req);
 
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
 // Add a new user to the whitelist
 async function addUser(req: Request) {
   const body = await req.json();
-  const { pubkey } = body;
+  const { pubkey, maxTokens, outputTokens, upperTokensLimit } = body;
 
   // Validate the input
   if (!pubkey) {
@@ -94,7 +97,7 @@ async function addUser(req: Request) {
   }
 
   const { apiUrl } = getApiConfig();
-  const url = `${apiUrl}/rest/whitelist/add?wallet_pubkey=${pubkey}`;
+  const url = `${apiUrl}/rest/whitelist/add?walletPubkey=${pubkey}&maxTokens=${maxTokens}&outputTokens=${outputTokens}&upperTokensLimit=${upperTokensLimit}`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -107,6 +110,49 @@ async function addUser(req: Request) {
   if (!res.ok) {
     const responseBody = await res.text();
     console.error(`Failed to create whitelist user: ${responseBody}`);
+    throw new Error(`Error: ${responseBody}`);
+  }
+
+  const data = await res.json();
+  return NextResponse.json({ success: true, data }, { status: 201 });
+}
+
+async function updateUser(req: Request) {
+  const body = await req.json();
+  const { id, pubkey, maxTokens, outputTokens, upperTokensLimit } = body;
+
+  const session = await getServerSession();
+  const token = session?.user?.name;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: "Unauthorized. Please sign in first." },
+      { status: 401 },
+    );
+  }
+
+  const { apiUrl } = getApiConfig();
+  const url = `${apiUrl}/rest/whitelist/update`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      id,
+      pubkey,
+      maxTokens: parseInt(maxTokens, 10),
+      outputTokens: parseInt(outputTokens, 10),
+      upperTokensLimit: parseInt(upperTokensLimit, 10),
+    }),
+  });
+  0;
+
+  if (!res.ok) {
+    const responseBody = await res.text();
+    console.error(`Failed to update whitelist user: ${responseBody}`);
     throw new Error(`Error: ${responseBody}`);
   }
 
@@ -170,7 +216,7 @@ export async function DELETE(req: Request) {
     }
 
     const { apiUrl } = getApiConfig();
-    const url = `${apiUrl}/rest/whitelist/remove?wallet_pubkey=${pubkey}`;
+    const url = `${apiUrl}/rest/whitelist/remove/${pubkey}`;
 
     const res = await fetch(url, {
       method: "POST",

@@ -1,23 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 
-const AddWhitelistUserPage = () => {
+const UpdateWhitelistUserPage = () => {
   const router = useRouter();
-  const [newUser, setNewUser] = useState({
+  const searchParams = useSearchParams();
+
+  const [formData, setFormData] = useState({
+    id: "",
     pubkey: "",
-    maxTokens: 1024,
+    maxTokens: 0,
     outputTokens: 0,
-    upperTokensLimit: 5000,
+    upperTokensLimit: 0,
   });
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewUser((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,17 +28,17 @@ const AddWhitelistUserPage = () => {
     setError(null);
 
     try {
-      const response = await fetch("/api/whitelist?action=addUser", {
+      const response = await fetch("/api/whitelist?action=updateUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create a new user");
+        throw new Error(errorData.error || "Failed to update a user");
       }
 
       // Redirect back to the whitelist page after successful creation
@@ -45,6 +48,21 @@ const AddWhitelistUserPage = () => {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    if (searchParams) {
+      setFormData({
+        id: searchParams.get("id") || "",
+        pubkey: searchParams.get("pubkey") || "",
+        maxTokens: parseInt(searchParams.get("maxTokens") || "0", 10),
+        outputTokens: parseInt(searchParams.get("outputTokens") || "0", 10),
+        upperTokensLimit: parseInt(
+          searchParams.get("upperTokensLimit") || "0",
+          10,
+        ),
+      });
+    }
+  }, [searchParams]);
 
   return (
     <DefaultLayout>
@@ -61,15 +79,28 @@ const AddWhitelistUserPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                ID
+              </label>
+              <input
+                type="text"
+                name="pubkey"
+                value={formData.id}
+                onChange={handleInputChange}
+                className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Public Key
               </label>
               <input
                 type="text"
                 name="pubkey"
-                value={newUser.pubkey}
+                value={formData.pubkey}
                 onChange={handleInputChange}
                 className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                required
+                readOnly
               />
             </div>
             <div>
@@ -79,7 +110,7 @@ const AddWhitelistUserPage = () => {
               <input
                 type="text"
                 name="maxTokens"
-                value={newUser.maxTokens}
+                value={formData.maxTokens}
                 onChange={handleInputChange}
                 className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 required
@@ -92,7 +123,7 @@ const AddWhitelistUserPage = () => {
               <input
                 type="text"
                 name="outputTokens"
-                value={newUser.outputTokens}
+                value={formData.outputTokens}
                 onChange={handleInputChange}
                 className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 required
@@ -105,7 +136,7 @@ const AddWhitelistUserPage = () => {
               <input
                 type="text"
                 name="upperTokensLimit"
-                value={newUser.upperTokensLimit}
+                value={formData.upperTokensLimit}
                 onChange={handleInputChange}
                 className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 required
@@ -116,7 +147,7 @@ const AddWhitelistUserPage = () => {
                 type="submit"
                 className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
-                Create User
+                Update
               </button>
               <button
                 type="button"
@@ -133,4 +164,4 @@ const AddWhitelistUserPage = () => {
   );
 };
 
-export default AddWhitelistUserPage;
+export default UpdateWhitelistUserPage;
