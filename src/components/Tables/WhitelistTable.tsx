@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import UploadMerkleRootButton from "../Button/UploadMerkleRootButton";
 
 interface Whitelist {
   id: string;
@@ -15,6 +16,8 @@ const WhitelistTable = () => {
   const router = useRouter();
   const [whitelists, setWhitelists] = useState<Whitelist[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "error" | null>(null);
 
   const getWhitelists = async () => {
     try {
@@ -73,6 +76,24 @@ const WhitelistTable = () => {
     }
   };
 
+  const handleUploadMerkleRootSuccess = () => {
+    setAlertMessage("Merkle root uploaded successfully!");
+    setAlertType("success");
+    setTimeout(() => {
+      setAlertMessage(null);
+      setAlertType(null);
+    }, 3000);
+  };
+
+  const handleUploadMerkleRootError = (errorMessage: string) => {
+    setAlertMessage(errorMessage || "Failed to upload merkle root.");
+    setAlertType("error");
+    setTimeout(() => {
+      setAlertMessage(null);
+      setAlertType(null);
+    }, 3000);
+  };
+
   useEffect(() => {
     getWhitelists();
   }, []);
@@ -82,6 +103,31 @@ const WhitelistTable = () => {
       <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
         Whitelist Table
       </h4>
+
+      <div className="mb-6 flex items-center justify-start gap-4">
+        <UploadMerkleRootButton
+          onSuccess={handleUploadMerkleRootSuccess}
+          onError={handleUploadMerkleRootError}
+        />
+        <a
+          href="/whitelist/create"
+          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        >
+          Add New User
+        </a>
+      </div>
+
+      {alertMessage && (
+        <div
+          className={`mb-4 px-4 py-2 rounded ${
+            alertType === "success"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          } shadow-md`}
+        >
+          {alertMessage}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex h-20 items-center justify-center">
@@ -94,38 +140,31 @@ const WhitelistTable = () => {
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto divide-y divide-gray-300 dark:divide-gray-700">
-            <thead className="bg-gray-100 dark:bg-gray-700">
+            <thead className="bg-gray-200 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   ID
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Public Key
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Max Tokens
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Output Tokens
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Upper Tokens Limit
                 </th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {whitelists.map((item, index) => (
-                <tr
-                  key={item.id}
-                  className={`${
-                    index % 2 === 0
-                      ? "bg-gray-50 dark:bg-gray-700"
-                      : "bg-gray-100 dark:bg-gray-800"
-                  }`}
-                >
+                <tr key={item.id} className="bg-gray-50 dark:bg-gray-700">
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     {item.id}
                   </td>
@@ -141,7 +180,7 @@ const WhitelistTable = () => {
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     {item.upperTokensLimit}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                  <td className="flex justify-between px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     <button
                       className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                       onClick={() => navigateToUpdatePage(item)}

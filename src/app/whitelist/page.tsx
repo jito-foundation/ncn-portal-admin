@@ -22,13 +22,6 @@ const WhitelistPage = async () => {
       <div className="flex flex-col gap-10">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Whitelist</h1>
-          <UploadMerkleRootButton />
-          <a
-            href="/whitelist/create"
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Add New User
-          </a>
         </div>
         <WhitelistTable />
       </div>
