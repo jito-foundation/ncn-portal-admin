@@ -7,7 +7,12 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 
 const AddWhitelistUserPage = () => {
   const router = useRouter();
-  const [newUser, setNewUser] = useState({ pubkey: "", maxTokens: 1024, outputTokens: 0, upperTokensLimit: 5000 });
+  const [newUser, setNewUser] = useState({
+    pubkey: "",
+    maxTokens: 1024,
+    outputTokens: 0,
+    upperTokensLimit: 5000,
+  });
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

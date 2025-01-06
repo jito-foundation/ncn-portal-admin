@@ -142,12 +142,13 @@ async function updateUser(req: Request) {
     },
     body: JSON.stringify({
       id,
-      pubkey, 
+      pubkey,
       maxTokens: parseInt(maxTokens, 10),
-      outputTokens: parseInt(outputTokens, 10), 
-      upperTokensLimit: parseInt(upperTokensLimit, 10)
+      outputTokens: parseInt(outputTokens, 10),
+      upperTokensLimit: parseInt(upperTokensLimit, 10),
     }),
-  });0
+  });
+  0;
 
   if (!res.ok) {
     const responseBody = await res.text();
