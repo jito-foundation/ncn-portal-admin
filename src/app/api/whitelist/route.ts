@@ -1,14 +1,21 @@
-import { NextResponse } from "next/server";
-import { getApiConfig } from "../apiConfig";
 import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 
-export async function GET(_req: Request) {
+import { getApiConfig } from "../apiConfig";
+
+export async function GET(req: Request) {
   try {
     const { apiUrl } = getApiConfig();
     const proof = await getWhitelists(apiUrl);
     return NextResponse.json(proof);
   } catch (error) {
     console.error(error);
+
+    // Check if error is 401 Unauthorized
+    if (error instanceof Error && error.message.includes("401")) {
+      return NextResponse.redirect(new URL("/auth/signin", req.url));
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -19,6 +26,12 @@ export async function GET(_req: Request) {
   }
 }
 
+/**
+ * Get all whitelists
+ *
+ * @param apiUrl base server url
+ * @returns
+ */
 const getWhitelists = async (apiUrl: string) => {
   const session = await getServerSession();
   const token = session?.user?.name;
@@ -65,7 +78,17 @@ export async function POST(req: Request) {
         break;
     }
   } catch (error) {
-    console.error("Error creating user:", error);
+    if (error instanceof Error) {
+      if (error.message.includes("401")) {
+        return NextResponse.redirect(new URL("/auth/signin", req.url));
+      }
+      console.error(error.message);
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.message.startsWith("400") ? 400 : 500 },
+      );
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
@@ -73,7 +96,12 @@ export async function POST(req: Request) {
   }
 }
 
-// Add a new user to the whitelist
+/**
+ * Add a new user to the whitelist
+ *
+ * @param req Request
+ * @returns
+ */
 async function addUser(req: Request) {
   const body = await req.json();
   const { pubkey, maxTokens, outputTokens, upperTokensLimit } = body;
@@ -90,10 +118,7 @@ async function addUser(req: Request) {
   const token = session?.user?.name;
 
   if (!token) {
-    return NextResponse.json(
-      { error: "Unauthorized. Please sign in first." },
-      { status: 401 },
-    );
+    throw new Error("401 Unauthorized");
   }
 
   const { apiUrl } = getApiConfig();
@@ -117,6 +142,16 @@ async function addUser(req: Request) {
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
+/**
+ * Update the following  user's` fieds:
+ *
+ * - `maxTokens`
+ * - `outputTokens`
+ * - `upperTokensLimit`
+ *
+ * @param req Request
+ * @returns
+ */
 async function updateUser(req: Request) {
   const body = await req.json();
   const { id, pubkey, maxTokens, outputTokens, upperTokensLimit } = body;
@@ -125,10 +160,7 @@ async function updateUser(req: Request) {
   const token = session?.user?.name;
 
   if (!token) {
-    return NextResponse.json(
-      { error: "Unauthorized. Please sign in first." },
-      { status: 401 },
-    );
+    throw new Error("401 Unauthorized");
   }
 
   const { apiUrl } = getApiConfig();
@@ -160,16 +192,18 @@ async function updateUser(req: Request) {
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
-// Update Merkle Root
+/**
+ * After adding new user, should update Merkle Root, then upload the Merkle Root on-chain
+ *
+ * @param req Request
+ * @returns
+ */
 async function updateMerkleRoot(req: Request) {
   const session = await getServerSession();
   const token = session?.user?.name;
 
   if (!token) {
-    return NextResponse.json(
-      { error: "Unauthorized. Please sign in first." },
-      { status: 401 },
-    );
+    throw new Error("401 Unauthorized");
   }
 
   const { apiUrl } = getApiConfig();
@@ -209,10 +243,7 @@ export async function DELETE(req: Request) {
     const token = session?.user?.name;
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized. Please sign in first." },
-        { status: 401 },
-      );
+      throw new Error("401 Unauthorized");
     }
 
     const { apiUrl } = getApiConfig();
@@ -234,7 +265,17 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("Error deleting whitelist entry:", error);
+    if (error instanceof Error) {
+      if (error.message.includes("401")) {
+        return NextResponse.redirect(new URL("/auth/signin", req.url));
+      }
+      console.error(error.message);
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.message.startsWith("400") ? 400 : 500 },
+      );
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },

@@ -33,16 +33,17 @@ const AddWhitelistUserPage = () => {
         body: JSON.stringify(newUser),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create a new user");
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else if (!response.ok) {
+        const error = await response.json();
+        setError(error.message);
       }
 
       // Redirect back to the whitelist page after successful creation
       router.push("/whitelist");
     } catch (error: any) {
       setError(error.message);
-      console.error(error);
     }
   };
 

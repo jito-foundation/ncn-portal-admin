@@ -30,8 +30,11 @@ const WhitelistTable = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch whitelist data");
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else if (!response.ok) {
+        const error = await response.json();
+        console.error(error.message);
       }
 
       const json = await response.json();
@@ -65,8 +68,11 @@ const WhitelistTable = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete whitelist entry");
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else if (!response.ok) {
+        const error = await response.json();
+        console.error(error.message);
       }
 
       // Update the UI after successful deletion
