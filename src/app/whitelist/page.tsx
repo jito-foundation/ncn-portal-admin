@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import WhitelistTable from "@/components/Tables/WhitelistTable";
-import UploadMerkleRootButton from "@/components/Button/UploadMerkleRootButton";
 
 export const metadata: Metadata = {
   title: "Whitelist",
@@ -17,6 +16,7 @@ const WhitelistPage = async () => {
   if (!session || !session.user) {
     redirect("/api/auth/signin");
   }
+
   return (
     <DefaultLayout>
       <div className="flex flex-col gap-10">

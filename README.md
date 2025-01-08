@@ -3,10 +3,8 @@
 ## Environment Variables
 
 ```
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_URL_INTERNAL=http://127.0.0.1:3000
-NEXTAUTH_SECRET=
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXTAUTH_SECRET="iltvP3Uz6w2Fn4mM636oIEGGZ7G66o70Xuv11xmR5lk="
 ```
 
 ## Installation
