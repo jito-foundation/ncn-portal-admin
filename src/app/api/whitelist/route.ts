@@ -143,7 +143,7 @@ async function addUser(req: Request) {
 }
 
 /**
- * Update the following  user's` fieds:
+ * Update the following  user's fieds:
  *
  * - `maxTokens`
  * - `outputTokens`
@@ -193,7 +193,7 @@ async function updateUser(req: Request) {
 }
 
 /**
- * After adding new user, should update Merkle Root, then upload the Merkle Root on-chain
+ * After adding new user, should update Merkle Root, then upload the Merkle Root to on-chain
  *
  * @param req Request
  * @returns

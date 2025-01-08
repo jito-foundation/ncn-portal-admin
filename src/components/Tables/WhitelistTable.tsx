@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
 import UploadMerkleRootButton from "../Button/UploadMerkleRootButton";
 
 interface Whitelist {
