@@ -5,7 +5,8 @@ import "@/css/style.css";
 import React from "react";
 import { getServerSession } from "next-auth";
 
-import SessionProvider from "../components/SessionProvider";
+import SessionProvider from "../components/Provider/SessionProvider";
+import { ChainContextProvider } from "@/components/Provider/ChainContextProvider";
 
 export default async function RootLayout({
   children,
@@ -17,9 +18,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <SessionProvider session={session}>
-          <div className="dark:bg-boxdark-2 dark:text-bodydark">{children}</div>
-        </SessionProvider>
+        <ChainContextProvider>
+          <SessionProvider session={session}>
+            <div className="dark:bg-boxdark-2 dark:text-bodydark">
+              {children}
+            </div>
+          </SessionProvider>
+        </ChainContextProvider>
       </body>
     </html>
   );
