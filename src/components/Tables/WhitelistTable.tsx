@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Pencil, Trash } from "lucide-react";
 
 import UploadMerkleRootButton from "../Button/UploadMerkleRootButton";
 
@@ -10,7 +11,8 @@ interface Whitelist {
   pubkey: string;
   maxTokens: string;
   outputTokens: string;
-  upperTokensLimit: string;
+  upperTokensLimit: string,
+  accessStatus: number,
 }
 
 const WhitelistTable = () => {
@@ -126,11 +128,10 @@ const WhitelistTable = () => {
 
       {alertMessage && (
         <div
-          className={`mb-4 rounded px-4 py-2 ${
-            alertType === "success"
+          className={`mb-4 rounded px-4 py-2 ${alertType === "success"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
-          } shadow-md`}
+            } shadow-md`}
         >
           {alertMessage}
         </div>
@@ -150,9 +151,6 @@ const WhitelistTable = () => {
             <thead className="bg-gray-200 dark:bg-gray-800">
               <tr>
                 <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
-                  ID
-                </th>
-                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Public Key
                 </th>
                 <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
@@ -165,16 +163,16 @@ const WhitelistTable = () => {
                   Upper Tokens Limit
                 </th>
                 <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
+                  Access Status
+                </th>
+                <th className="border-b border-gray-300 px-4 py-3 text-left text-sm font-bold uppercase text-gray-700 dark:border-gray-600 dark:text-gray-100">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {whitelists.map((item, index) => (
-                <tr key={item.id} className="bg-gray-50 dark:bg-gray-700">
-                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
-                    {item.id}
-                  </td>
+                <tr key={index} className="bg-gray-50 dark:bg-gray-700">
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     {item.pubkey}
                   </td>
@@ -187,18 +185,34 @@ const WhitelistTable = () => {
                   <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     {item.upperTokensLimit}
                   </td>
+                  <td className="px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
+                    {(() => {
+                      switch (item.accessStatus) {
+                        case 0:
+                          return "Not Whitelisted (Needs to request access)";
+                        case 1:
+                          return "Pending Approval (Waiting for admin approval)";
+                        case 2:
+                          return "Approved (Can access the chatbot)";
+                        case 3:
+                          return "Banned / Revoked (Access is permanently denied)";
+                        default:
+                          return "Unknown Status";
+                      }
+                    })()}
+                  </td>
                   <td className="flex justify-between px-4 py-2 text-sm text-gray-800 dark:text-gray-300">
                     <button
                       className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
                       onClick={() => navigateToUpdatePage(item)}
                     >
-                      Update
+                      <Pencil size={18} />
                     </button>
                     <button
                       className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
                       onClick={() => deleteWhitelist(item.pubkey)}
                     >
-                      Delete
+                      <Trash size={18} />
                     </button>
                   </td>
                 </tr>
