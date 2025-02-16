@@ -15,10 +15,11 @@ const UpdateWhitelistUserPage = () => {
     maxTokens: 0,
     outputTokens: 0,
     upperTokensLimit: 0,
+    accessStatus: 0,
   });
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -61,6 +62,7 @@ const UpdateWhitelistUserPage = () => {
           searchParams.get("upperTokensLimit") || "0",
           10,
         ),
+        accessStatus: parseInt(searchParams.get("accessStatus") || "0", 10)
       });
     }
   }, [searchParams]);
@@ -70,7 +72,7 @@ const UpdateWhitelistUserPage = () => {
       <div className="flex items-center justify-center">
         <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
           <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
-            Add New User to Whitelist
+            Update User
           </h2>
           {error && (
             <div className="mb-4 rounded bg-red-100 p-3 text-red-700 dark:bg-red-800 dark:text-red-300">
@@ -143,6 +145,18 @@ const UpdateWhitelistUserPage = () => {
                 required
               />
             </div>
+            <select
+              name="accessStatus"
+              value={formData.accessStatus}
+              onChange={handleInputChange}
+              className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              required
+            >
+              <option value="0">Not Whitelisted (Needs to request access)</option>
+              <option value="1">Pending Approval (Waiting for admin approval)</option>
+              <option value="2">Approved (Can access the chatbot)</option>
+              <option value="3">Banned / Revoked (Access is permanently denied)</option>
+            </select>
             <div className="flex items-center justify-between">
               <button
                 type="submit"
