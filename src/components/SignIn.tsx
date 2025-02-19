@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSignIn } from "@solana/react";
-import { Badge, Button, Dialog, DropdownMenu, Flex, Heading } from "@radix-ui/themes";
-import NextLink from "next/link";
+import { Badge, Button, Dialog } from "@radix-ui/themes";
 import { ChainContext } from "@/components/Provider/ChainContext";
-import { ConnectWalletMenu } from "@/components/ConnectWalletMenu";
 import { SelectedWalletAccountContext } from "@/components/context/SelectedWalletAccountContext";
 import { NO_ERROR } from "@/util/errors";
 import { UiWalletAccount } from "@wallet-standard/react";
@@ -27,63 +25,6 @@ const SignIn = ({ account }: Props) => {
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     const [error, setError] = useState<symbol | any>(NO_ERROR);
     const [isSendingTransaction, setIsSendingTransaction] = useState(false);
-
-    // const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    //   event.preventDefault();
-
-    //   const callbackUrl = searchParams.get("callbackUrl") || "/";
-
-    //   try {
-    //     const resMessage = await request("getSiwsMessage");
-    //     const messageJson = await resMessage.json();
-    //     const { account, signedMessage, signature } = await signInWithSolana(
-    //         messageJson.data,
-    //     );
-
-    //     const url = "/api/login";
-
-    //     const data = {
-    //         requestType: "validateAndVerify",
-    //         domain: window.location.host,
-    //         address: account.address,
-    //         account,
-    //         signedMessage,
-    //         signature,
-    //     };
-
-    //     const res = await fetch(url, {
-    //         method: "POST",
-    //         headers: {
-    //             "Content-Type": "application/json",
-    //         },
-    //         body: JSON.stringify(data),
-    //     });
-
-    //     const json = await res.json();
-    //     if (json.data) {
-    //         // login!();
-    //         const callbackUrl = searchParams.get("callbackUrl") || "/";
-    //         router.push(callbackUrl);
-    //     } else {
-    //         setError({ message: "You are not whitelisted" });
-    //     }
-
-    //     const response = await signIn("credentials", {
-    //       redirect: false,
-    //       username,
-    //       password,
-
-    //     });
-    //     if (response?.error) {
-    //       setErrorMessage("Sign-in failed. Please check your credentials.");
-    //     } else {
-    //       setErrorMessage(null);
-    //       router.push(callbackUrl);
-    //     }
-    //   } catch (err) {
-    //     setErrorMessage("An unexpected error occurred. Please try again.");
-    //   }
-    // };
 
     const {
         displayName: currentChainName,
@@ -157,7 +98,7 @@ const SignIn = ({ account }: Props) => {
     };
 
     return (
-        <div>
+        <div className="flex flex-col gap-4">
             {selectedWalletAccount ? (
                 <Dialog.Root
                     open={!!lastSignature}

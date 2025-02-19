@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext, useMemo, useState } from "react";
-import { Badge, Button, Dialog, DropdownMenu, Flex, Heading } from "@radix-ui/themes";
+import { Badge, Button, Card, Dialog, DropdownMenu, Flex, Heading } from "@radix-ui/themes";
 import { ChainContext } from "@/components/Provider/ChainContext";
 import { ConnectWalletMenu } from "@/components/ConnectWalletMenu";
 import { SelectedWalletAccountContext } from "@/components/context/SelectedWalletAccountContext";
@@ -29,18 +29,19 @@ const SignInPage: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-gray-900">
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="">
-          <Flex align="center" gap="3" className="ml-auto">
-            <ConnectWalletMenu>Connect Wallet</ConnectWalletMenu>
-          </Flex>
-          {selectedWalletAccount ? (
-            <SignIn account={selectedWalletAccount} />
-
-          ) : (<div></div>)}
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 text-white">
+      <Card className="p-8 w-96 rounded-xl shadow-lg backdrop-blur-lg bg-white/10 border border-white/20">
+        <Heading size="4" align="center" className="mb-4 font-semibold">
+          Welcome to NCN Portal Admin
+        </Heading>
+        <Flex align="center" justify="center" gap="3" className="mb-4">
+          <Badge color="gray">{currentChainName}</Badge>
+        </Flex>
+        <div className="flex flex-col gap-4">
+          <ConnectWalletMenu>Connect Wallet</ConnectWalletMenu>
+          {selectedWalletAccount && <SignIn account={selectedWalletAccount} />}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
