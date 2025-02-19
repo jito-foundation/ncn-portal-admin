@@ -53,14 +53,14 @@ const authOptions: NextAuthOptions = {
       id: "solana",
       name: "Login with Solana",
       credentials: {
-        host: { label: "Host", type: "text" },
+        url: { label: "URL", type: "text" },
         address: { label: "Wallet Address", type: "text" },
         account: { label: "Account Info", type: "text" },
         signedMessage: { label: "Signed Message", type: "text" },
         signature: { label: "Signature", type: "text" },
       },
       async authorize(credentials) {
-        const host = credentials?.host;
+        const url = credentials?.url;
         const address = credentials?.address;
         const account = credentials?.account;
         const signedMessage = credentials?.signedMessage;
@@ -77,7 +77,7 @@ const authOptions: NextAuthOptions = {
         const { apiUrl } = getApiConfig();
         const response = await validateAndVerify(
           apiUrl,
-          host!,
+          url!,
           parsedAccount,
           parsedSignedMessage,
           parsedSignature,
@@ -96,12 +96,14 @@ const authOptions: NextAuthOptions = {
 
 const validateAndVerify = async (
   apiUrl: string,
-  domain: string,
+  url: string,
   accountData: UiWalletAccount | undefined,
   signedMessageData: Uint8Array<ArrayBufferLike> | undefined,
   signatureData: Uint8Array<ArrayBufferLike> | undefined,
 ) => {
-  const url = `${apiUrl}/rest/login?domain=${domain}`;
+  // const url = `${apiUrl}/rest/login?domain=${domain}`;
+  const requestUrl = new URL(`${apiUrl}/rest/login`);
+  requestUrl.searchParams.set("url", url);
 
   const convertPublicKeyToArray = (publicKey: any) => {
     if (!publicKey) return [];
@@ -128,7 +130,7 @@ const validateAndVerify = async (
     signature,
   };
 
-  const res = await fetch(url, {
+  const res = await fetch(requestUrl, {
     headers: {
       "Content-Type": "application/json",
     },
