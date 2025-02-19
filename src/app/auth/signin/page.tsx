@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext } from "react";
-import { Badge,  Card, Flex, Heading } from "@radix-ui/themes";
+import { Badge, Card, Flex, Heading } from "@radix-ui/themes";
 import { ChainContext } from "@/components/Provider/ChainContext";
 import { ConnectWalletMenu } from "@/components/ConnectWalletMenu";
 import { SelectedWalletAccountContext } from "@/components/context/SelectedWalletAccountContext";
@@ -23,7 +23,7 @@ const SignInPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-indigo-800 to-blue-900 text-white">
-      <Card className="p-8 w-96 rounded-xl shadow-lg backdrop-blur-lg bg-white/10 border border-white/20">
+      <Card className="w-96 rounded-xl border border-white/20 bg-white/10 p-8 shadow-lg backdrop-blur-lg">
         <Heading size="4" align="center" className="mb-4 font-semibold">
           Welcome to NCN Portal Admin
         </Heading>

@@ -75,11 +75,17 @@ const authOptions: NextAuthOptions = {
         const parsedSignature = JSON.parse(signature!);
 
         const { apiUrl } = getApiConfig();
-        const response = await validateAndVerify(apiUrl, host!, parsedAccount, parsedSignedMessage, parsedSignature);
+        const response = await validateAndVerify(
+          apiUrl,
+          host!,
+          parsedAccount,
+          parsedSignedMessage,
+          parsedSignature,
+        );
         return {
           id: response.data,
           name: response.data,
-        }
+        };
       },
     }),
   ],

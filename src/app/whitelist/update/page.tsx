@@ -19,7 +19,9 @@ const UpdateWhitelistUserPage = () => {
   });
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -62,7 +64,7 @@ const UpdateWhitelistUserPage = () => {
           searchParams.get("upperTokensLimit") || "0",
           10,
         ),
-        accessStatus: parseInt(searchParams.get("accessStatus") || "0", 10)
+        accessStatus: parseInt(searchParams.get("accessStatus") || "0", 10),
       });
     }
   }, [searchParams]);
@@ -152,10 +154,16 @@ const UpdateWhitelistUserPage = () => {
               className="mt-1 w-full rounded border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             >
-              <option value="0">Not Whitelisted (Needs to request access)</option>
-              <option value="1">Pending Approval (Waiting for admin approval)</option>
+              <option value="0">
+                Not Whitelisted (Needs to request access)
+              </option>
+              <option value="1">
+                Pending Approval (Waiting for admin approval)
+              </option>
               <option value="2">Approved (Can access the chatbot)</option>
-              <option value="3">Banned / Revoked (Access is permanently denied)</option>
+              <option value="3">
+                Banned / Revoked (Access is permanently denied)
+              </option>
             </select>
             <div className="flex items-center justify-between">
               <button

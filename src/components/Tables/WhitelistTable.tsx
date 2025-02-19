@@ -11,8 +11,8 @@ interface Whitelist {
   pubkey: string;
   maxTokens: string;
   outputTokens: string;
-  upperTokensLimit: string,
-  accessStatus: number,
+  upperTokensLimit: string;
+  accessStatus: number;
 }
 
 const WhitelistTable = () => {
@@ -128,10 +128,11 @@ const WhitelistTable = () => {
 
       {alertMessage && (
         <div
-          className={`mb-4 rounded px-4 py-2 ${alertType === "success"
+          className={`mb-4 rounded px-4 py-2 ${
+            alertType === "success"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
-            } shadow-md`}
+          } shadow-md`}
         >
           {alertMessage}
         </div>
