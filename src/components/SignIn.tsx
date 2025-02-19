@@ -10,6 +10,7 @@ import { ConnectWalletMenu } from "@/components/ConnectWalletMenu";
 import { SelectedWalletAccountContext } from "@/components/context/SelectedWalletAccountContext";
 import { NO_ERROR } from "@/util/errors";
 import { UiWalletAccount } from "@wallet-standard/react";
+import { signIn } from "next-auth/react";
 
 type Props = Readonly<{
     account: UiWalletAccount;
@@ -19,7 +20,7 @@ const SignIn = ({ account }: Props) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [selectedWalletAccount] = useContext(SelectedWalletAccountContext);
-    const signIn = useSignIn(account);
+    const signInWithSolana = useSignIn(account);
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [lastSignature, setLastSignature] = useState<Uint8Array | undefined>();
@@ -33,11 +34,45 @@ const SignIn = ({ account }: Props) => {
     //   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
     //   try {
+    //     const resMessage = await request("getSiwsMessage");
+    //     const messageJson = await resMessage.json();
+    //     const { account, signedMessage, signature } = await signInWithSolana(
+    //         messageJson.data,
+    //     );
+
+    //     const url = "/api/login";
+
+    //     const data = {
+    //         requestType: "validateAndVerify",
+    //         domain: window.location.host,
+    //         address: account.address,
+    //         account,
+    //         signedMessage,
+    //         signature,
+    //     };
+
+    //     const res = await fetch(url, {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //         },
+    //         body: JSON.stringify(data),
+    //     });
+
+    //     const json = await res.json();
+    //     if (json.data) {
+    //         // login!();
+    //         const callbackUrl = searchParams.get("callbackUrl") || "/";
+    //         router.push(callbackUrl);
+    //     } else {
+    //         setError({ message: "You are not whitelisted" });
+    //     }
+
     //     const response = await signIn("credentials", {
     //       redirect: false,
     //       username,
     //       password,
-    //       callbackUrl,
+
     //     });
     //     if (response?.error) {
     //       setErrorMessage("Sign-in failed. Please check your credentials.");
@@ -86,36 +121,32 @@ const SignIn = ({ account }: Props) => {
         try {
             const resMessage = await request("getSiwsMessage");
             const messageJson = await resMessage.json();
-            const { account, signedMessage, signature } = await signIn(
+            const { account, signedMessage, signature } = await signInWithSolana(
                 messageJson.data,
             );
 
-            const url = "/api/login";
+            console.log("Signing in with NextAuth...");
 
-            const data = {
-                requestType: "validateAndVerify",
-                domain: window.location.host,
+
+
+            const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+            const result = await signIn("solana", {
+                redirect: false,
+                callbackUrl,
+                host: window.location.host,
                 address: account.address,
-                account,
-                signedMessage,
-                signature,
-            };
+                account: JSON.stringify(account),
+                signedMessage: JSON.stringify(signedMessage),
+                signature: JSON.stringify(signature),
+            })
 
-            const res = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            });
+            console.log("NextAuth response:", result);
 
-            const json = await res.json();
-            if (json.data) {
-                // login!();
-                const callbackUrl = searchParams.get("callbackUrl") || "/";
+            if (result?.ok) {
                 router.push(callbackUrl);
             } else {
-                setError({ message: "You are not whitelisted" });
+                setError({ message: "Authentication failed" });
             }
         } catch (e) {
             setLastSignature(undefined);
