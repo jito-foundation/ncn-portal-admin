@@ -154,7 +154,14 @@ async function addUser(req: Request) {
  */
 async function updateUser(req: Request) {
   const body = await req.json();
-  const { id, pubkey, maxTokens, outputTokens, upperTokensLimit, accessStatus } = body;
+  const {
+    id,
+    pubkey,
+    maxTokens,
+    outputTokens,
+    upperTokensLimit,
+    accessStatus,
+  } = body;
 
   const session = await getServerSession();
   const token = session?.user?.name;
