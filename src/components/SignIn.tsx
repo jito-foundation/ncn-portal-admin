@@ -42,7 +42,7 @@ const SignIn = ({ account }: Props) => {
     const data = {
       requestType,
       address: selectedWalletAccount?.address,
-      url: window.location.href
+      url: window.location.href,
     };
 
     return await fetch(url, {
@@ -63,9 +63,8 @@ const SignIn = ({ account }: Props) => {
       const messageJson = await resMessage.json();
       const solanaSignInInput: SolanaSignInInput = messageJson.data;
 
-      const { account, signedMessage, signature } = await signInWithSolana(
-        solanaSignInInput,
-      );
+      const { account, signedMessage, signature } =
+        await signInWithSolana(solanaSignInInput);
 
       const callbackUrl = searchParams.get("callbackUrl") || "/";
 

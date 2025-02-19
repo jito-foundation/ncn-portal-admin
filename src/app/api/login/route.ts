@@ -33,11 +33,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-const getSiwsMessage = async (
-  apiUrl: string,
-  address: string,
-  url: string,
-) => {
+const getSiwsMessage = async (apiUrl: string, address: string, url: string) => {
   const requestUrl = `${apiUrl}/rest/login/${address}/siws_message`;
   const data = {
     address,

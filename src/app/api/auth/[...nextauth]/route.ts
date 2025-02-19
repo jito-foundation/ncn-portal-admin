@@ -101,7 +101,6 @@ const validateAndVerify = async (
   signedMessageData: Uint8Array<ArrayBufferLike> | undefined,
   signatureData: Uint8Array<ArrayBufferLike> | undefined,
 ) => {
-  // const url = `${apiUrl}/rest/login?domain=${domain}`;
   const requestUrl = new URL(`${apiUrl}/rest/login`);
   requestUrl.searchParams.set("url", url);
 
