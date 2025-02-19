@@ -147,7 +147,6 @@ const Theme = ({
     return applyTheme(forcedTheme ?? theme!);
   }, [applyTheme, forcedTheme, theme]);
 
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   useEffect(() => {
     if (typeof window !== "undefined") {
       const theme = localStorage.getItem(storageKey);

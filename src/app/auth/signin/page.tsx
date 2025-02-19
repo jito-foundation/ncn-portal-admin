@@ -1,21 +1,14 @@
 "use client";
 
-import React, { useContext, useMemo, useState } from "react";
-import { Badge, Button, Card, Dialog, DropdownMenu, Flex, Heading } from "@radix-ui/themes";
+import React, { useContext } from "react";
+import { Badge,  Card, Flex, Heading } from "@radix-ui/themes";
 import { ChainContext } from "@/components/Provider/ChainContext";
 import { ConnectWalletMenu } from "@/components/ConnectWalletMenu";
 import { SelectedWalletAccountContext } from "@/components/context/SelectedWalletAccountContext";
-import { NO_ERROR } from "@/util/errors";
 import SignIn from "@/components/SignIn";
 
 const SignInPage: React.FC = () => {
   const [selectedWalletAccount] = useContext(SelectedWalletAccountContext);
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [lastSignature, setLastSignature] = useState<Uint8Array | undefined>();
-  /* eslint-disable  @typescript-eslint/no-explicit-any */
-  const [error, setError] = useState<symbol | any>(NO_ERROR);
-  const [isSendingTransaction, setIsSendingTransaction] = useState(false);
 
   const {
     displayName: currentChainName,

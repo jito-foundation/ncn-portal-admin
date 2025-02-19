@@ -20,9 +20,7 @@ const SignIn = ({ account }: Props) => {
     const [selectedWalletAccount] = useContext(SelectedWalletAccountContext);
     const signInWithSolana = useSignIn(account);
 
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [lastSignature, setLastSignature] = useState<Uint8Array | undefined>();
-    /* eslint-disable  @typescript-eslint/no-explicit-any */
     const [error, setError] = useState<symbol | any>(NO_ERROR);
     const [isSendingTransaction, setIsSendingTransaction] = useState(false);
 

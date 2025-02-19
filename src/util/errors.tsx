@@ -34,7 +34,7 @@ export function getErrorMessage(
     return (
       <Flex direction="column" gap="4">
         <Text as="p">
-          The wallet '{err.context.walletName}' (
+          The wallet &apos;{err.context.walletName}&apos; (
           {err.context.supportedChains.sort().map((chain, ii, { length }) => (
             <React.Fragment key={chain}>
               <Code>{chain}</Code>
