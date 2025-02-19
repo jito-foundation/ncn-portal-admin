@@ -9,6 +9,7 @@ import { SelectedWalletAccountContext } from "@/components/context/SelectedWalle
 import { NO_ERROR } from "@/util/errors";
 import { UiWalletAccount } from "@wallet-standard/react";
 import { signIn } from "next-auth/react";
+import { SolanaSignInInput } from "@solana/wallet-standard-features";
 
 type Props = Readonly<{
   account: UiWalletAccount;
@@ -41,7 +42,7 @@ const SignIn = ({ account }: Props) => {
     const data = {
       requestType,
       address: selectedWalletAccount?.address,
-      domain: window.location.host,
+      url: window.location.href,
     };
 
     return await fetch(url, {
@@ -60,16 +61,17 @@ const SignIn = ({ account }: Props) => {
     try {
       const resMessage = await request("getSiwsMessage");
       const messageJson = await resMessage.json();
-      const { account, signedMessage, signature } = await signInWithSolana(
-        messageJson.data,
-      );
+      const solanaSignInInput: SolanaSignInInput = messageJson.data;
+
+      const { account, signedMessage, signature } =
+        await signInWithSolana(solanaSignInInput);
 
       const callbackUrl = searchParams.get("callbackUrl") || "/";
 
       const result = await signIn("solana", {
         redirect: false,
         callbackUrl,
-        host: window.location.host,
+        url: window.location.href,
         address: account.address,
         account: JSON.stringify(account),
         signedMessage: JSON.stringify(signedMessage),
