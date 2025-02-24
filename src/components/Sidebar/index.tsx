@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import SidebarItem from "@/components/Sidebar/SidebarItem";
 import ClickOutside from "@/components/ClickOutside";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -254,10 +254,7 @@ const menuGroups = [
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
-  const [adminPubkey, setAdminPubkey] = useState("");
-  const [adminBalance, setAdminBalance] = useState("");
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
-  const [copyStatus, setCopyStatus] = useState("");
 
   const {
     displayName: currentChainName,
@@ -269,57 +266,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       {currentChainName}
     </p>
   );
-
-  const getAdminConfig = async () => {
-    try {
-      const url = "/api/admin";
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.redirected) {
-        window.location.href = response.url;
-      } else if (!response.ok) {
-        const error = await response.json();
-        console.error(error.message);
-      }
-
-      const json = await response.json();
-
-      const formattedSolValue = new Intl.NumberFormat(undefined, {
-        maximumFractionDigits: 5,
-      }).format(
-        // @ts-expect-error This format string is 100% allowed now.
-        `${json.data.balance}E-9`,
-      );
-
-      setAdminPubkey(json.data.pubkey);
-      setAdminBalance(formattedSolValue);
-    } catch (error) {
-      console.error("Error fetching whitelist: ", error);
-    }
-  };
-
-  const handleCopyPubkey = () => {
-    navigator.clipboard
-      .writeText(adminPubkey)
-      .then(() => {
-        setCopyStatus("Copied!");
-        setTimeout(() => setCopyStatus(""), 2000); // Reset status after 2 seconds
-      })
-      .catch(() => {
-        setCopyStatus("Failed to copy");
-        setTimeout(() => setCopyStatus(""), 2000); // Reset status after 2 seconds
-      });
-  };
-
-  useEffect(() => {
-    getAdminConfig();
-  }, []);
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
@@ -373,24 +319,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </div>
             ))}
           </nav>
-        </div>
-
-        <div className="mt-auto p-4 text-white">
-          <p className="text-sm font-bold">Admin Pubkey:</p>
-          <div className="flex items-center justify-between gap-2">
-            <p className="flex-grow truncate text-xs">{adminPubkey}</p>
-            <button
-              onClick={handleCopyPubkey}
-              className="text-xs text-blue-400 hover:underline"
-            >
-              Copy
-            </button>
-          </div>
-          {copyStatus && (
-            <p className="mt-1 text-xs text-green-400">{copyStatus}</p>
-          )}
-          <p className="mt-2 text-sm font-bold">Balance:</p>
-          <p className="text-xs">{adminBalance}</p>
         </div>
       </aside>
     </ClickOutside>

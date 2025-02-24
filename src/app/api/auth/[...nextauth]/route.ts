@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { getApiConfig } from "../../apiConfig";
+import { getApiConfig, loginEndpoint } from "../../apiConfig";
 import { UiWalletAccount } from "@wallet-standard/react";
 
 const authOptions: NextAuthOptions = {
@@ -101,7 +101,8 @@ const validateAndVerify = async (
   signedMessageData: Uint8Array<ArrayBufferLike> | undefined,
   signatureData: Uint8Array<ArrayBufferLike> | undefined,
 ) => {
-  const requestUrl = new URL(`${apiUrl}/rest/login`);
+  const endpoint = loginEndpoint();
+  const requestUrl = new URL(`${apiUrl}${endpoint}`);
   requestUrl.searchParams.set("url", url);
 
   const convertPublicKeyToArray = (publicKey: any) => {

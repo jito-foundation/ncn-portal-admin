@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getApiConfig } from "../apiConfig";
+import { getApiConfig, getLoginSiwsMessageEndpoint } from "../apiConfig";
 import { UiWalletAccount } from "@wallet-standard/react";
 
 export async function POST(req: NextRequest) {
@@ -34,11 +34,13 @@ export async function POST(req: NextRequest) {
 }
 
 const getSiwsMessage = async (apiUrl: string, address: string, url: string) => {
-  const requestUrl = `${apiUrl}/rest/login/${address}/siws_message`;
+  const endpoint = getLoginSiwsMessageEndpoint(address);
+  const requestUrl = new URL(`${apiUrl}${endpoint}`);
   const data = {
     address,
     url,
   };
+
   const res = await fetch(requestUrl, {
     headers: {
       "Content-Type": "application/json",
