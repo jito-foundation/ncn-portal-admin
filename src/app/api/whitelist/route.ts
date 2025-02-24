@@ -1,7 +1,13 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-import { addWhitelistEndpoint, getApiConfig, listWhitelistEndpoint, removeWhitelistEndpoint, updateWhitelistEndpoint } from "../apiConfig";
+import {
+  addWhitelistEndpoint,
+  getApiConfig,
+  listWhitelistEndpoint,
+  removeWhitelistEndpoint,
+  updateWhitelistEndpoint,
+} from "../apiConfig";
 
 export async function GET(req: Request) {
   try {

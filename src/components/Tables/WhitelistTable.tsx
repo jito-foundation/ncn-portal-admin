@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Pencil, Trash } from "lucide-react";
 
-// import UploadMerkleRootButton from "../Button/UploadMerkleRootButton";
-
 interface Whitelist {
   id: string;
   pubkey: string;
@@ -85,24 +83,6 @@ const WhitelistTable = () => {
     }
   };
 
-  // const handleUploadMerkleRootSuccess = () => {
-  //   setAlertMessage("Merkle root uploaded successfully!");
-  //   setAlertType("success");
-  //   setTimeout(() => {
-  //     setAlertMessage(null);
-  //     setAlertType(null);
-  //   }, 3000);
-  // };
-
-  // const handleUploadMerkleRootError = (errorMessage: string) => {
-  //   setAlertMessage(errorMessage || "Failed to upload merkle root.");
-  //   setAlertType("error");
-  //   setTimeout(() => {
-  //     setAlertMessage(null);
-  //     setAlertType(null);
-  //   }, 3000);
-  // };
-
   useEffect(() => {
     getWhitelists();
   }, []);
@@ -114,10 +94,6 @@ const WhitelistTable = () => {
       </h4>
 
       <div className="mb-6 flex items-center justify-start gap-4">
-        {/* <UploadMerkleRootButton
-          onSuccess={handleUploadMerkleRootSuccess}
-          onError={handleUploadMerkleRootError}
-        /> */}
         <a
           href="/whitelist/create"
           className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
