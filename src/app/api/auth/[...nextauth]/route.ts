@@ -103,7 +103,6 @@ const validateAndVerify = async (
 ) => {
   const endpoint = loginEndpoint();
   const requestUrl = new URL(`${apiUrl}${endpoint}`);
-  // const requestUrl = new URL(`${apiUrl}/rest/login`);
   requestUrl.searchParams.set("url", url);
 
   const convertPublicKeyToArray = (publicKey: any) => {

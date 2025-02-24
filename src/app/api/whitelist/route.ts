@@ -36,7 +36,6 @@ const getWhitelists = async (apiUrl: string) => {
   const session = await getServerSession();
   const token = session?.user?.name;
 
-  // const url = `${apiUrl}/rest/whitelist/get/all`;
   const endpoint = listWhitelistEndpoint();
   const url = new URL(`${apiUrl}${endpoint}`);
 
@@ -73,9 +72,6 @@ export async function POST(req: Request) {
 
       case "updateUser":
         return updateUser(req);
-
-      // case "updateMerkleRoot":
-      //   return updateMerkleRoot(req);
 
       default:
         break;
@@ -125,8 +121,6 @@ async function addUser(req: Request) {
   }
 
   const { apiUrl } = getApiConfig();
-  // const url = `${apiUrl}/rest/whitelist/add?walletPubkey=${pubkey}&maxTokens=${maxTokens}&outputTokens=${outputTokens}&upperTokensLimit=${upperTokensLimit}`;
-
   const endpoint = addWhitelistEndpoint();
   const url = new URL(`${apiUrl}${endpoint}`);
   url.searchParams.set("walletPubkey", pubkey);
@@ -181,7 +175,6 @@ async function updateUser(req: Request) {
   }
 
   const { apiUrl } = getApiConfig();
-  // const url = `${apiUrl}/rest/whitelist/update`;
   const endpoint = updateWhitelistEndpoint();
   const url = new URL(`${apiUrl}${endpoint}`);
 
@@ -211,43 +204,6 @@ async function updateUser(req: Request) {
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
-// /**
-//  * After adding new user, should update Merkle Root, then upload the Merkle Root to on-chain
-//  *
-//  * @param req Request
-//  * @returns
-//  */
-// async function updateMerkleRoot(req: Request) {
-//   const session = await getServerSession();
-//   const token = session?.user?.name;
-
-//   if (!token) {
-//     throw new Error("401 Unauthorized");
-//   }
-
-//   const { apiUrl } = getApiConfig();
-//   // const url = `${apiUrl}/rest/merkle_tree/update`;
-//   const endpoint = updateWhitelistEndpoint();
-//   const url = new URL(`${apiUrl}${endpoint}`);
-
-//   const res = await fetch(url, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${token}`,
-//     },
-//   });
-
-//   if (!res.ok) {
-//     const responseBody = await res.text();
-//     console.error(`Failed to update merkle root: ${responseBody}`);
-//     throw new Error(`Error: ${responseBody}`);
-//   }
-
-//   const data = await res.json();
-//   return NextResponse.json({ success: true, data }, { status: 201 });
-// }
-
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -268,7 +224,6 @@ export async function DELETE(req: Request) {
     }
 
     const { apiUrl } = getApiConfig();
-    // const url = `${apiUrl}/rest/whitelist/remove/${pubkey}`;
     const endpoint = removeWhitelistEndpoint(pubkey);
     const url = new URL(`${apiUrl}${endpoint}`);
 
