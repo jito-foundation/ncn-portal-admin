@@ -1,5 +1,11 @@
 # NCN Portal Admin
 
+## Prerequisites
+
+- [Volta](https://docs.volta.sh/guide/getting-started) installed (optional).
+- Solna Wallet installed.
+
+
 ## Environment Variables
 
 Copy `.env.example` file
