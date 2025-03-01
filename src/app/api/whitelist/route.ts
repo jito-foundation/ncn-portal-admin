@@ -129,10 +129,6 @@ async function addUser(req: Request) {
   const { apiUrl } = getApiConfig();
   const endpoint = addWhitelistEndpoint();
   const url = new URL(`${apiUrl}${endpoint}`);
-  url.searchParams.set("walletPubkey", pubkey);
-  url.searchParams.set("maxTokens", maxTokens);
-  url.searchParams.set("outputTokens", outputTokens);
-  url.searchParams.set("upperTokensLimit", upperTokensLimit);
 
   const res = await fetch(url, {
     method: "POST",
@@ -140,6 +136,12 @@ async function addUser(req: Request) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({
+      walletPubkey: pubkey,
+      maxTokens: parseInt(maxTokens, 10),
+      outputTokens: parseInt(outputTokens, 10),
+      upperTokensLimit: parseInt(upperTokensLimit, 10),
+    }),
   });
 
   if (!res.ok) {
